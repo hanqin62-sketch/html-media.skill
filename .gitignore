@@ -1,0 +1,15 @@
+node_modules/
+outputs/
+.test-output/
+.html-media-*/
+*.log
+*.tmp
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.idea/
+.vscode/

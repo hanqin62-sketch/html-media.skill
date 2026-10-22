@@ -1,0 +1,33 @@
+name: Bug report / 问题反馈
+description: Report a reproducible rendering or installation problem / 反馈可复现的问题
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: 'English and Chinese are welcome. Remove private data and local paths. 欢迎中英文，请先脱敏。'
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual result / 预期与实际结果
+      description: Include exact copy when relevant / 涉及文案时请提供原文
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction / 最小复现
+      description: Commands, small HTML, and a sanitized screenshot / 命令、简短 HTML 和脱敏截图
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / 运行环境
+      placeholder: 'OS, commit, Node, browser, FFmpeg, fonts / 系统、提交版本、运行时、字体'
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant errors / 相关报错
+      description: Redact secrets and absolute local paths / 移除凭据和本机绝对路径

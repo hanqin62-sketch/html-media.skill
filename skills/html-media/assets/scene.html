@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>把文字，好好放进画面</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+  body { color: #20251e; font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+  #scene { width: 100vw; height: 100vh; position: relative; overflow: hidden; background: #f0f0e7; }
+  .top { position: absolute; top: 7%; left: 6%; right: 6%; display: flex; justify-content: space-between; align-items: center; font-size: 1.1vw; font-weight: 700; letter-spacing: .12em; }
+  .brand { display: flex; align-items: center; gap: 1vw; }
+  .dot { width: .75vw; height: .75vw; background: #e84b27; border-radius: 100%; }
+  .edition { font-size: .85vw; color: #69715d; font-weight: 500; }
+  .copy { position: absolute; top: 26%; left: 6%; width: 52%; }
+  .kicker { font-size: 1vw; letter-spacing: .16em; color: #68715d; margin-bottom: 2.2vw; }
+  h1 { font-size: 4.65vw; line-height: 1.45; letter-spacing: -.045em; font-weight: 800; margin: 0; }
+  h1 span { color: #e84b27; }
+  .sub { font-size: 1.15vw; line-height: 2; color: #69715d; margin: 1.8vw 0 0; }
+  .graphic { position: absolute; right: 6%; top: 24%; width: 33%; height: 53%; }
+  .grid { position: absolute; inset: -5% -7%; background-image: linear-gradient(#bec5b440 1px, transparent 1px), linear-gradient(90deg,#bec5b440 1px,transparent 1px); background-size: 2.6vw 2.6vw; transform: rotate(-5deg); }
+  .card { position: absolute; inset: 0; background: #253e31; color: #f2f0df; box-shadow: 0 1.5vw 3vw #24392922; padding: 2.3vw; transform-origin: 50% 65%; }
+  .card-top { display:flex; justify-content:space-between; font-size:.8vw; letter-spacing:.08em; color:#c3cbb9; }
+  .big { font-family: "Microsoft YaHei", sans-serif; font-size: 14vw; font-weight: 500; line-height: 1.3; margin-top: .3vw; text-align:center; }
+  .baseline { position:absolute; top:73%; left:10%; right:10%; border-bottom: 1px solid #a1b59d80; }
+  .card-bottom { position:absolute; bottom:8%; left:9%; right:9%; font-size:1.05vw; text-align:center; letter-spacing:.09em; }
+  .badge { position:absolute; bottom: -7%; right: -5%; width: 7.8vw; height: 7.8vw; border-radius:100%; background:#e84b27; color:#fff5e7; display:flex; flex-direction:column; justify-content:center; align-items:center; transform:rotate(9deg); }
+  .badge strong { font-size:1.8vw; font-weight:600; }
+  .badge span { font-size:.8vw; margin-top:.45vw; letter-spacing:.1em; }
+  .bottom { position:absolute; bottom:7%; left:6%; right:6%; border-top:1px solid #bdc3b2; padding-top:1.3vw; display:flex; justify-content:space-between; align-items:center; font-size:.9vw; color:#66715d; }
+  .flow { display:flex; gap:1.2vw; align-items:center; }
+  .flow b { color:#1f382a; font-weight:500; }
+  .progress { position:absolute; bottom:0; left:0; height:.45vw; background:#e84b27; width:0; }
+</style>
+<main id="scene">
+  <header class="top"><div class="brand"><i class="dot"></i>字有章法 / TYPE IN MOTION</div><span class="edition">HTML MEDIA · 01</span></header>
+  <section class="copy">
+    <div class="kicker">从可编辑的文字，到清晰的画面</div>
+    <h1>把文字，<br><span>好好放进画面。</span></h1>
+    <p class="sub">中文、数字、标点，各在其位。<br>静态成图，动态成片。</p>
+  </section>
+  <section class="graphic">
+    <div class="grid"></div>
+    <div class="card"><div class="card-top"><span>字形 / 001</span><span>TEXT AS TEXT</span></div><div class="big">字</div><div class="baseline"></div><div class="card-bottom">字体、字号、字距，都可控。</div></div>
+    <div class="badge"><strong>清晰</strong><span>始于排版</span></div>
+  </section>
+  <footer class="bottom"><div class="flow"><b>HTML 排版</b><span>→</span><b>浏览器渲染</b><span>→</span><b>PNG / MP4</b></div><span>文字可编辑 · 画面可复现</span></footer>
+  <div class="progress"></div>
+</main>
+<script>
+  const copy = document.querySelector('.copy');
+  const card = document.querySelector('.card');
+  const badge = document.querySelector('.badge');
+  const progress = document.querySelector('.progress');
+  const ease = x => 1 - (1 - Math.max(0, Math.min(1, x))) ** 3;
+  window.renderAt = seconds => {
+    const p = ease(seconds / .9);
+    copy.style.opacity = String(.45 + .55 * p);
+    copy.style.transform = `translateY(${(1 - p) * 18}px)`;
+    card.style.transform = `rotate(${-4 + 4 * p}deg) translateY(${(1-p)*20}px)`;
+    badge.style.transform = `rotate(${9 - 8 * ease((seconds-.3)/.8)}deg) scale(${.85 + .15*p})`;
+    progress.style.width = `${Math.max(0, Math.min(1, seconds / 3.7)) * 100}%`;
+  };
+  window.renderAt(1.5);
+</script>
+</html>

@@ -1,0 +1,24 @@
+name: Feature proposal / 功能建议
+description: Propose a concrete workflow improvement / 提出具体的流程改进
+title: '[Idea] '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Use case and problem / 场景与问题
+      description: Show a real task that is hard today / 描述当前难以完成的真实任务
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior / 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: evaluation
+    attributes:
+      label: How to evaluate success / 如何判断完成
+      description: Example input, expected output, and checks / 输入样例、预期输出和检查方法
+    validations:
+      required: true

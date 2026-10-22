@@ -1,0 +1,24 @@
+name: Share an example / 分享作品
+description: Share editable artwork or a useful failure case / 分享可编辑作品或失败案例
+title: '[Example] '
+body:
+  - type: textarea
+    id: result
+    attributes:
+      label: What you made or learned / 作品或经验
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source and reproduction / 源码与复现方法
+      description: Share HTML and commands; remove private assets / 提供 HTML 与命令，移除私密素材
+    validations:
+      required: true
+  - type: textarea
+    id: rights
+    attributes:
+      label: Asset sources and licenses / 素材来源与许可
+      description: Identify images, fonts, and audio; say if everything is original / 说明图片、字体、音频来源，全部原创也请注明
+    validations:
+      required: true

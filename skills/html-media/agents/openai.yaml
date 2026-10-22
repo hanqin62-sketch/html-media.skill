@@ -1,0 +1,4 @@
+interface:
+  display_name: "HTML Media · 图片与视频"
+  short_description: "Render editable HTML into text-focused images and videos"
+  default_prompt: "Use $html-media to create an image or video with editable text, render it, and inspect the result."
