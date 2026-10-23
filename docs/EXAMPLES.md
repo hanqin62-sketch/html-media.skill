@@ -85,6 +85,16 @@ This is an instructed compositing workflow, not automatic old-text removal or au
 
 > 用 $html-media 把海报做成 4 秒、24 帧/秒的动态标题。第一秒让文字淡入并小幅移动，结束前停留在完整画面，文案不变。使用确定性的 renderAt(seconds)，导出无声 MP4，并检查编码后的视频代表帧。
 
+## Batch report and font observation / 批量报告与字体观察
+
+Run `npm run demo:batch` to render both city configs into a new directory, with an offline `index.html` containing media previews, actual font families, readable findings, and expandable JSON details. The location is saved in `outputs/latest-batch.txt`. Copy/layout inspection is strict; font observation is enabled. No external fonts are redistributed in these examples.
+
+运行 `npm run demo:batch`，两份城市配置会输出到新目录，离线 `index.html` 展示成品预览、实际字体、问题摘要和可展开的 JSON 明细；目录位置保存到 `outputs/latest-batch.txt`。默认严格检查原文和排版，并观察字体。案例不附带外部字体文件。
+
+See [batch usage](../skills/html-media/references/batch.md) / [批量说明](../skills/html-media/references/batch.zh-CN.md), and [font checks](../skills/html-media/references/fonts.md) / [字体检查](../skills/html-media/references/fonts.zh-CN.md).
+
+The original synthetic [test font](../tests/fixtures/test-font.ttf) contains only `A` and space. Its [generator](../tests/fixtures/build_test_font.py) and tests intentionally exercise missing characters and fallback; this MIT-licensed fixture is not a general-purpose font.
+
 ## Share an example / 分享案例
 
 Open a [showcase issue](https://github.com/hanqin62-sketch/html-media.skill/issues/new/choose). Include editable source, a small preview, reproduction commands, and asset/font licensing notes. Remove private data and local paths first.

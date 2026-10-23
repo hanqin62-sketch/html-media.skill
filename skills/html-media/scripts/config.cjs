@@ -20,7 +20,7 @@ function readConfig(file) {
   const source = path.resolve(file);
   const data = JSON.parse(fs.readFileSync(source, 'utf8').replace(/^\uFEFF/, ''));
   object(data, 'Config');
-  keys(data, ['version', 'template', 'text', 'styles', 'assets'], 'Config');
+  keys(data, ['version', 'template', 'text', 'styles', 'assets', 'fonts'], 'Config');
   if (data.version !== 1) throw new Error('Config requires version: 1.');
   const base = path.dirname(source);
   const template = localFile(data.template, base, 'template');
@@ -28,7 +28,8 @@ function readConfig(file) {
   if (!Array.isArray(text)) throw new Error('Config text must be an array.');
   for (const layer of text) {
     object(layer, 'Text layer');
-    keys(layer, ['id', 'selector', 'text', 'visibleFrom', 'visibleUntil'], 'Text layer');
+    keys(layer, ['id', 'selector', 'text', 'visibleFrom', 'visibleUntil', 'fontId', 'expectedFonts'], 'Text layer');
+    if (layer.expectedFonts !== undefined && (!Array.isArray(layer.expectedFonts) || !layer.expectedFonts.length || layer.expectedFonts.some(x => typeof x !== 'string' || !x.trim()))) throw new Error('expectedFonts must be a nonempty array of actual font family names.');
   }
   const manifest = text.length ? validateManifest({ version: 1, layers: text }) : null;
   const styles = data.styles === undefined ? {} : data.styles;
@@ -45,11 +46,22 @@ function readConfig(file) {
     const sourcePath = localFile(asset.src, base, 'Image asset src');
     return { selector: asset.selector, sourcePath, url: pathToFileURL(sourcePath).href };
   });
-  return { source, template, text, styles, images, manifest };
+  const definitions = data.fonts === undefined ? [] : data.fonts;
+  if (!Array.isArray(definitions)) throw new Error('fonts must be an array.');
+  const ids = new Set(), families = new Set();
+  const fonts = definitions.map(def => {
+    object(def, 'Font'); keys(def, ['id', 'family', 'src', 'weight', 'style'], 'Font');
+    if (typeof def.id !== 'string' || !def.id || ids.has(def.id) || typeof def.family !== 'string' || !def.family.trim() || families.has(def.family.toLowerCase())) throw new Error('Fonts require unique ids and family aliases.');
+    for (const key of ['weight', 'style']) if (def[key] !== undefined && (typeof def[key] !== 'string' || !def[key].trim())) throw new Error(`Font ${key} must be a nonempty string.`);
+    ids.add(def.id); families.add(def.family.toLowerCase());
+    return { ...def, sourcePath: localFile(def.src, base, 'Font src') };
+  });
+  for (const layer of text) if (layer.fontId !== undefined && !ids.has(layer.fontId)) throw new Error(`Unknown fontId for ${layer.id}.`);
+  return { source, template, text, styles, images, fonts, manifest };
 }
 
 // Runs after template readiness and before renderAt / asset decoding.
-function applyConfig({ text, styles, images }) {
+function applyConfig({ text, styles, images, fonts = [] }) {
   const bind = (item, kind) => {
     let elements;
     try { elements = document.querySelectorAll(item.selector); }
@@ -76,6 +88,7 @@ function applyConfig({ text, styles, images }) {
     if (kind === 'text') {
       element.textContent = item.text;
       element.style.whiteSpace = 'pre-wrap';
+      if (item.fontId) element.style.fontFamily = `${JSON.stringify(fonts.find(font => font.id === item.fontId).family)}, sans-serif`;
     } else {
       element.removeAttribute('srcset');
       element.removeAttribute('sizes');

@@ -7,9 +7,10 @@ const { pathToFileURL } = require('node:url');
 const { spawnSync } = require('node:child_process');
 const { readManifest, inspectFrame, inspectionSummary } = require('./inspect.cjs');
 const { readConfig, applyConfig, sameFile } = require('./config.cjs');
+const { prepareFonts, loadFonts, fontInspector } = require('./fonts.cjs');
 
 function argumentsFor(argv) {
-  const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help', 'strict-checks']);
+  const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help', 'strict-checks', 'check-fonts', 'strict-fonts']);
   const values = new Set(['html', 'out', 'width', 'height', 'scale', 'time', 'duration', 'fps', 'browser', 'ffmpeg', 'manifest', 'config']);
   const out = {};
   for (let i = 0; i < argv.length; i++) {
@@ -51,7 +52,7 @@ async function launch(chromium, executablePath) {
 async function main() {
   const args = argumentsFor(process.argv.slice(2));
   if (args.help) {
-    console.log('node render.cjs (--html scene.html | --config design.json) --out image.png|image.jpg|video.mp4 --width 1280 --height 720 [--scale 1] [--time 0] [--duration 4 --fps 30] [--transparent] [--browser PATH] [--ffmpeg PATH] [--overwrite] [--allow-network] [--manifest copy.json (HTML mode only)] [--strict-checks]');
+    console.log('node render.cjs (--html scene.html | --config design.json) --out image.png|image.jpg|video.mp4 [--width 1280 --height 720] [--scale 1] [--time 0] [--duration 4 --fps 30] [--transparent] [--browser PATH] [--ffmpeg PATH] [--overwrite] [--allow-network] [--manifest copy.json (HTML mode only)] [--strict-checks] [--check-fonts] [--strict-fonts]');
     return;
   }
   if (!args.out || (!args.html && !args.config)) throw new Error('--out and either --html or --config are required; use --help.');
@@ -64,8 +65,11 @@ async function main() {
   if (sameFile(manifestPath, output) || sameFile(manifestPath, reportPath)) throw new Error('Output must not replace the copy manifest.');
   const manifest = config ? config.manifest : manifestPath ? readManifest(manifestPath) : null;
   if (args['strict-checks'] && !manifest) throw new Error('--strict-checks requires --manifest or a config with at least one text layer.');
+  const checkFonts = Boolean(args['check-fonts'] || args['strict-fonts'] || config?.fonts.length || config?.text.some(layer => layer.expectedFonts));
+  if (checkFonts && !manifest) throw new Error('Font inspection requires declared text layers.');
+  const preparedFonts = prepareFonts(config);
   if (config) {
-    for (const file of [config.source, ...config.images.map(image => image.sourcePath)]) {
+    for (const file of [config.source, ...config.images.map(image => image.sourcePath), ...config.fonts.map(font => font.sourcePath)]) {
       if (sameFile(file, output) || sameFile(file, reportPath)) throw new Error('Output must not replace a config or configured image asset.');
     }
   }
@@ -96,6 +100,7 @@ async function main() {
   fs.mkdirSync(path.dirname(output), { recursive: true });
   let browser;
   let frameDir;
+  let fontCheck;
   const issues = [];
   try {
     browser = await launch(playwright().chromium, args.browser);
@@ -119,7 +124,9 @@ async function main() {
         ]);
       } finally { clearTimeout(timer); }
     });
-    if (config) await page.evaluate(applyConfig, { text: config.text, styles: config.styles, images: config.images });
+    if (preparedFonts.length) await loadFonts(page, preparedFonts);
+    if (config) await page.evaluate(applyConfig, { text: config.text, styles: config.styles, images: config.images, fonts: config.fonts });
+    if (checkFonts) fontCheck = await fontInspector(context, page, manifest.layers, preparedFonts);
     if (video && !await page.evaluate(() => typeof window.renderAt === 'function')) {
       throw new Error('Video HTML must define deterministic window.renderAt(seconds).');
     }
@@ -145,6 +152,7 @@ async function main() {
       }, seconds);
       if (issues.length) throw new Error([...new Set(issues)].join('\n'));
       if (inspection) inspection.add(seconds, await page.evaluate(inspectFrame, { layers: manifest.layers, seconds }));
+      if (fontCheck) await fontCheck.sample(seconds);
     };
     const shotOptions = { type: ext === '.jpg' || ext === '.jpeg' ? 'jpeg' : 'png', animations: 'allow', omitBackground: Boolean(args.transparent), scale: 'device' };
     if (shotOptions.type === 'jpeg') shotOptions.quality = 95;
@@ -175,6 +183,7 @@ async function main() {
       ...layout,
       ...(config ? { configuration: { source: config.source, textLayers: config.text.length, styleVariables: Object.keys(config.styles), imageBindings: config.images.length } } : {}),
       ...(inspection ? { inspection: inspection.report() } : {}),
+      ...(fontCheck ? { fontInspection: fontCheck.report() } : {}),
       warnings: ['DOM text and overflow checks do not replace visual inspection of glyphs, clipping, or compositing.', ...(video ? ['Silent MP4; audio is not captured from HTML.'] : [])]
     };
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), { encoding: 'utf8', flag: args.overwrite ? 'w' : 'wx' });
@@ -182,6 +191,10 @@ async function main() {
     if (inspection && inspection.report().status === 'failed') {
       console.error('HTML media: inspection found issues; review the media and adjacent JSON report.');
       if (args['strict-checks']) process.exitCode = 2;
+    }
+    if (fontCheck?.report().findings.length) {
+      console.error('HTML media: font inspection needs review; see the adjacent JSON report.');
+      if (args['strict-fonts']) process.exitCode = 2;
     }
   } finally {
     try { if (browser) await browser.close(); }

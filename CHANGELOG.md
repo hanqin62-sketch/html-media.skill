@@ -1,5 +1,13 @@
 # Changelog / 更新记录
 
+## 0.4.0 — 2026-10-23
+
+- Actual browser font usage, configured local FontFace loading, code-point coverage, and opt-in strict font findings. 新增实际字体观察、本地字体加载、码点覆盖检查及可选严格模式。
+- Sequential batch rendering with per-job options, continued processing after errors, and fresh output directory protection. 新增逐项选项、失败后继续及新目录保护的批量渲染。
+- Offline HTML preview/status report and machine-readable batch summary. 新增离线 HTML 预览与状态报告、机器可读摘要。
+- Original synthetic font fixtures, font/video/batch regression tests, bilingual guides, and CI demos. 原创字体夹具、视频字体与批处理回归测试、双语指南和 CI 示例。
+- Added pinned Fontkit dependency; updated the existing YAML validator dependency to its patched version. 固定字体解析依赖，并更新现有 YAML 校验依赖至修复版本。
+
 ## 0.3.0 — 2026-10-23
 
 - Added `--config` for reusable templates with separate text, CSS variables, and local image bindings. 新增配置入口，分离模板、文案、样式变量及本地图片。

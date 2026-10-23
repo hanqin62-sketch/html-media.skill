@@ -23,6 +23,7 @@ const packageRoot = JSON.parse(read('package.json'));
 const packageSkill = JSON.parse(read('skills/html-media/package.json'));
 assert.equal(packageRoot.version, packageSkill.version);
 assert.equal(packageRoot.devDependencies.playwright, packageSkill.dependencies.playwright);
+assert.equal(packageRoot.devDependencies.fontkit, packageSkill.dependencies.fontkit);
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
     if (['node_modules', '.git', 'outputs', '.test-output'].includes(entry.name)) return [];

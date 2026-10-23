@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "defaults": { "width": 1280, "height": 720, "strictChecks": true, "checkFonts": true },
+  "jobs": [
+    { "id": "hangzhou", "config": "event-hangzhou.json", "format": "png" },
+    { "id": "chengdu", "config": "event-chengdu.json", "format": "png" }
+  ]
+}

@@ -12,12 +12,15 @@ This is a direction for collaboration, not a delivery schedule. Unchecked items 
 - [x] Asset readiness, missing-resource errors, overwrite protection. 素材等待、错误提示和覆盖保护。
 - [x] Basic export reports, behavioral tests, bilingual docs. 基础报告、行为测试与双语文档。
 
+- [x] Batch rendering with HTML previews and per-job status reports. 批量渲染、HTML 预览与逐项状态报告。
+
 ## Next: trustworthy inspection / 下一步：可靠验收
 
 - [x] Store an exact-copy manifest and compare it with text layers. 保存原文清单并与文字层核对。
 - [x] Detect basic overflow clipping, viewport overflow, and explicitly hidden critical text. 检查关键文字的基础容器裁切、画布越界与显式隐藏。
 - [ ] Extend inspection to complex occlusion and transformed clipping. 扩展复杂遮挡与变换后裁切的检查。
-- [ ] Add font/glyph coverage checks and optional OCR assistance. 字体字形覆盖检查与可选 OCR 辅助。
+- [x] Actual browser font usage and bound local font code-point coverage. 浏览器实际字体观察与绑定本地字体的码点覆盖检查。
+- [ ] Optional OCR assistance and complex shaping validation. 可选 OCR 辅助和复杂字形组合验证。
 - [ ] Try bounded local repair, preserving the user's content and reporting unresolved problems. 有限次数的局部修正，保留用户内容，明确未解决问题。
 
 ## Then: controlled editing / 随后：可控局部修改

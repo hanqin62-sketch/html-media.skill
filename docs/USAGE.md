@@ -75,3 +75,7 @@ Add `--manifest copy.json --strict-checks` to compare an independent copy manife
 ## Template configuration
 
 Use `--config design.json --out poster.png --strict-checks` to supply a template, exact copy, CSS variables, and local images in JSON. Configured text supplies its own inspection manifest. See the [configuration guide](../skills/html-media/references/configuration.md).
+
+## Fonts and batch output
+
+Use `--check-fonts` for actual font usage and `--strict-fonts` to enforce findings. Run configured jobs through `scripts/batch.cjs` for HTML previews and JSON summaries. See [font checks](../skills/html-media/references/fonts.md) and [batch usage](../skills/html-media/references/batch.md).

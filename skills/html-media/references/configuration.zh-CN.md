@@ -43,7 +43,7 @@ node SKILL_DIR/scripts/render.cjs --config design.json --out poster.png --width 
 
 `styles` 将非空字符串设置为 `:root` 上的 CSS 自定义属性，模板通过 `var(--名称)` 引用。不会自动判断变量是否被使用、值对具体 CSS 属性是否有效：变量拼错或 CSS 值非法时，页面可能继续使用默认值。字号等需要单位时，在字符串里写出 `px` 等单位。
 
-`assets` 仅绑定 `<picture>` 外的 `<img>`。渲染器设置 `src`、移除冲突的 `srcset`/`sizes`、主动加载并等待图片解码。模板资源先于配置加载，因此占位图片应省略 `src`，不要填写不存在的临时地址。背景图、字体、视频元素、SVG 图片属性继续在模板中处理。
+`assets` 仅绑定 `<picture>` 外的 `<img>`。渲染器设置 `src`、移除冲突的 `srcset`/`sizes`、主动加载并等待图片解码。模板资源先于配置加载，因此占位图片应省略 `src`，不要填写不存在的临时地址。背景图、视频元素、SVG 图片属性继续在模板中处理。本地字体绑定见[字体检查](fonts.zh-CN.md)。
 
 ## 加载顺序、动画与核对
 
@@ -59,4 +59,4 @@ node SKILL_DIR/scripts/render.cjs --config design.json --out poster.png --width 
 node scripts/render.cjs --config assets/examples/event-hangzhou.json --out poster.png --width 1280 --height 720 --strict-checks
 ```
 
-直接打开模板时看到的是未填内容的占位布局；使用渲染器配合 JSON 复现完整成品。本版提供单配置渲染，批处理和字体覆盖检查另行迭代。
+直接打开模板时看到的是未填内容的占位布局；使用渲染器配合 JSON 复现完整成品。多份配置见[批量渲染](batch.zh-CN.md)，本地字体与预期字体家族见[字体检查](fonts.zh-CN.md)。

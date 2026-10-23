@@ -7,6 +7,7 @@ const { spawnSync } = require('node:child_process');
 const { PNG } = require('pngjs');
 const { readManifest } = require('../skills/html-media/scripts/inspect.cjs');
 const { readConfig } = require('../skills/html-media/scripts/config.cjs');
+const { readBatch, htmlReport } = require('../skills/html-media/scripts/batch.cjs');
 const root = path.resolve(__dirname, '..');
 const parent = path.join(root, '.test-output');
 fs.mkdirSync(parent, { recursive: true });
@@ -238,6 +239,73 @@ test('config and configured asset cannot be overwritten by output or report', ()
   const imageBefore = fs.readFileSync(asset);
   assert.match(configured(path.basename(asset), config, ['--overwrite'], 1).result.stderr, /must not replace/);
   assert.deepEqual(fs.readFileSync(asset), imageBefore);
+});
+
+test('local fonts load, actual font usage is reported, and missing glyphs/fallback trigger strict font checks', () => {
+  const fonts = [{ id: 'test', family: 'TestAlias', src: path.join(__dirname, 'fixtures', 'test-font.ttf') }];
+  const config = configuration('font-ok.json', { fonts, text: [{ id: 'title', selector: '#title', text: 'A A', fontId: 'test' }] });
+  const good = configured('font-ok.png', config, ['--strict-checks', '--strict-fonts']).file;
+  const check = JSON.parse(fs.readFileSync(`${good}.json`)).fontInspection;
+  assert.equal(check.files[0].loadStatus, 'loaded');
+  assert.equal(check.layers[0].fonts[0].familyName, 'HTML Media Test');
+  assert.equal(check.layers[0].fonts[0].isCustomFont, true);
+  assert.deepEqual(check.findings, []);
+  const badConfig = configuration('font-missing.json', { fonts, text: [{ id: 'title', selector: '#title', text: 'A中', fontId: 'test' }] });
+  const bad = configured('font-missing.png', badConfig, ['--strict-fonts'], 2).file;
+  const findings = JSON.parse(fs.readFileSync(`${bad}.json`)).fontInspection.findings;
+  assert.deepEqual(findings.find(f => f.code === 'missing-glyphs').characters, ['中']);
+  assert(findings.some(f => f.code === 'unexpected-font'));
+  const warning = configured('font-warning.png', badConfig).file;
+  assert.equal(JSON.parse(fs.readFileSync(`${warning}.json`)).fontInspection.status, 'needs-review');
+});
+test('declared expected fonts detect system fallback and invalid font bindings fail', () => {
+  const config = configuration('font-expected.json', { text: [{ id: 'title', selector: '#title', text: 'ABC', expectedFonts: ['Not An Installed Family'] }] });
+  const result = configured('font-expected.png', config, ['--strict-fonts'], 2);
+  assert(JSON.parse(fs.readFileSync(`${result.file}.json`)).fontInspection.findings.some(f => f.code === 'unexpected-font'));
+  assert.throws(() => readConfig(configuration('font-invalid.json', { text: [{ id: 'title', selector: '#title', text: 'A', fontId: 'unknown' }] })), /Unknown fontId/);
+});
+
+test('video font inspection catches a family change in a later exported frame', () => {
+  const template = path.join(output, 'font-timeline.html');
+  fs.writeFileSync(template, '<!doctype html><meta charset="utf-8"><style>body{margin:0}#title{position:absolute;top:16px;left:16px;font-size:20px}</style><div id="title"></div><script>window.renderAt=t=>{if(t>=0.25)document.querySelector("#title").style.fontFamily="serif"}</script>');
+  const config = configuration('font-timeline.json', { template, assets: [], fonts: [{ id: 'test', family: 'TestAlias', src: path.join(__dirname, 'fixtures', 'test-font.ttf') }], text: [{ id: 'title', selector: '#title', text: 'A', fontId: 'test' }] });
+  const result = configured('font-timeline.mp4', config, ['--duration', '0.5', '--fps', '4', '--strict-fonts'], 2);
+  const report = JSON.parse(fs.readFileSync(`${result.file}.json`)).fontInspection;
+  assert.equal(report.layers[0].samples, 2);
+  const finding = report.findings.find(f => f.code === 'unexpected-font');
+  assert.equal(finding.firstTime, 0.25);
+  assert.equal(finding.occurrences, 1);
+});
+test('batch continues after errors, distinguishes review findings, and protects previous output', () => {
+  const ok = configuration('batch-ok.json', { text: [{ id: 'title', selector: '#title', text: 'ABC' }] });
+  const review = configuration('batch-review.json', { text: [{ id: 'title', selector: '#title', text: 'ABC', expectedFonts: ['Not An Installed Family'] }] });
+  const batch = path.join(output, 'jobs.json');
+  fs.writeFileSync(batch, JSON.stringify({ version: 1, defaults: { width: 320, height: 240 }, jobs: [
+    { id: 'broken', config: 'missing.json' }, { id: 'review', config: path.basename(review) }, { id: 'good', config: path.basename(ok) }
+  ] }));
+  const destination = path.join(output, 'batch-run');
+  const args = [path.join(root, 'skills/html-media/scripts/batch.cjs'), '--batch', batch, '--out-dir', destination];
+  if (process.env.HTML_MEDIA_TEST_BROWSER) args.push('--browser', process.env.HTML_MEDIA_TEST_BROWSER);
+  const result = spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8', timeout: 90000, windowsHide: true });
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  const run = JSON.parse(fs.readFileSync(path.join(destination, 'run.json')));
+  assert.deepEqual(run.jobs.map(job => job.status), ['error', 'needs-review', 'passed']);
+  assert(fs.existsSync(path.join(destination, 'good.png')));
+  const html = fs.readFileSync(path.join(destination, 'index.html'), 'utf8');
+  assert(html.includes('good.png') && html.includes('unexpected-font'));
+  const again = spawnSync(process.execPath, args, { encoding: 'utf8', windowsHide: true });
+  assert.equal(again.status, 1);
+  assert.equal(fs.readFileSync(path.join(destination, 'index.html'), 'utf8'), html);
+});
+test('batch rejects traversal ids/options and escapes report content', () => {
+  const file = path.join(output, 'invalid-jobs.json');
+  for (const jobs of [[{ id: '../escape', config: 'x.json' }], [{ id: 'safe', config: 'x.json', options: { browser: 'bad' } }]]) {
+    fs.writeFileSync(file, JSON.stringify({ version: 1, jobs }));
+    assert.throws(() => readBatch(file));
+  }
+  const report = htmlReport({ status: 'error', jobs: [{ id: 'x', status: 'error', error: '<script>alert(1)</script>' }] });
+  assert(!report.includes('<script>'));
+  assert(report.includes('&lt;script&gt;'));
 });
 after(() => {
   if (path.dirname(output) === parent && path.basename(output).startsWith('run-')) fs.rmSync(output, { recursive: true, force: true });

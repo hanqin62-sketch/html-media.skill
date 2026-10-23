@@ -1,6 +1,7 @@
 # HTML Media
 
-**v0.3.0：**文案、样式变量与本地图片现可独立配置；同一 HTML 模板更换 JSON 即可复用，原文自动核对。运行 `npm run demo:config`，见[中文配置指南](skills/html-media/references/configuration.zh-CN.md)。
+**v0.4.0：**新增实际字体观察、本地字体缺字检查、批量渲染和可视化汇总报告。运行 `npm run demo:batch`，阅读[字体指南](skills/html-media/references/fonts.zh-CN.md)和[批量指南](skills/html-media/references/batch.zh-CN.md)。
+
 
 
 **文字可编辑，浏览器负责排版，画面按时间渲染。**

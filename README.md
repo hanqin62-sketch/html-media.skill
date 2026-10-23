@@ -1,6 +1,7 @@
 # HTML Media
 
-**v0.3.0:** Reuse one HTML template with separate JSON copy, CSS variables, and local images. Configured text is checked automatically. Run `npm run demo:config`; see the [configuration guide](skills/html-media/references/configuration.md).
+**v0.4.0:** Actual font usage, local font coverage checks, batch rendering, and visual summary reports. Try `npm run demo:batch`; read the [font guide](skills/html-media/references/fonts.md) and [batch guide](skills/html-media/references/batch.md).
+
 
 
 **Editable text. Browser-rendered images. Deterministic motion.**

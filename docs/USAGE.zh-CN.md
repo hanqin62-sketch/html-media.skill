@@ -75,3 +75,7 @@ HTML 会执行 JavaScript，只运行经过检查或可信的源码。HTTP(S) �
 ## 模板配置
 
 使用 `--config design.json --out poster.png --strict-checks`，在 JSON 中指定模板、原文、CSS 变量和本地图片。配置中的原文自动用于检查，无需额外清单。完整格式见[配置指南](../skills/html-media/references/configuration.zh-CN.md)。
+
+## 字体与批量输出
+
+用 `--check-fonts` 观察实际字体，`--strict-fonts` 强制处理字体问题。批量任务通过 `scripts/batch.cjs` 执行，输出 HTML 预览和 JSON 摘要。详见[字体检查](../skills/html-media/references/fonts.zh-CN.md)和[批量指南](../skills/html-media/references/batch.zh-CN.md)。
