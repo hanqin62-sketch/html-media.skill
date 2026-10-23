@@ -3,7 +3,11 @@ const fs = require('node:fs');
 
 function readManifest(file) {
   const data = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
-  if (data.version !== 1 || !Array.isArray(data.layers) || !data.layers.length) throw new Error('Manifest requires version: 1 and a nonempty layers array.');
+  return validateManifest(data);
+}
+
+function validateManifest(data) {
+  if (!data || data.version !== 1 || !Array.isArray(data.layers) || !data.layers.length) throw new Error('Manifest requires version: 1 and a nonempty layers array.');
   const ids = new Set();
   for (const layer of data.layers) {
     if (!layer || typeof layer.id !== 'string' || !layer.id || ids.has(layer.id) || typeof layer.selector !== 'string' || !layer.selector || typeof layer.text !== 'string') throw new Error('Each manifest layer needs a unique id, selector, and exact text string.');
@@ -95,4 +99,4 @@ function inspectionSummary(manifest) {
     }
   };
 }
-module.exports = { readManifest, inspectFrame, inspectionSummary };
+module.exports = { readManifest, validateManifest, inspectFrame, inspectionSummary };

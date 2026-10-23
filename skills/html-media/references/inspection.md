@@ -2,7 +2,7 @@
 
 [简体中文](inspection.zh-CN.md)
 
-Use `--manifest copy.json` to check explicitly declared text layers after the chosen still time or **every exported video frame**. Create the manifest from the user's approved copy before composing HTML; copying it back from the generated HTML defeats independent verification. No manifest means the original renderer behavior remains available.
+Use `--manifest copy.json` to check explicitly declared text layers after the chosen still time or **every exported video frame**. Create the manifest from the user's approved copy before composing HTML; copying it back from the generated HTML defeats independent verification. In HTML mode without a manifest, the original renderer behavior remains available; config mode derives its manifest from configured text.
 
 ```json
 {

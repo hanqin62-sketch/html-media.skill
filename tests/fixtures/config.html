@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8">
+<style>
+html,body{margin:0;width:320px;height:240px;overflow:hidden;background:var(--paper,#fff);font:14px/24px monospace}
+#title{position:absolute;top:16px;left:16px;width:280px}
+#picture{position:absolute;left:290px;top:210px;width:8px;height:8px}
+#outer{position:absolute;top:150px;left:16px}
+</style>
+<div id="title"></div><img id="picture" alt=""><div id="outer"><span id="inner">Nested</span></div>
+<script>window.renderAt=t=>{if(t===0.25)document.querySelector('#title').textContent='Unexpected timeline edit';};</script>

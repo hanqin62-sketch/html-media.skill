@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "template": "../templates/event.html",
+  "text": [
+    { "id": "label", "selector": "#label", "text": "示例活动 / HANGZHOU" },
+    { "id": "title", "selector": "#title", "text": "周末，去山野。" },
+    { "id": "description", "selector": "#description", "text": "走进青山，也走近自己。\n给忙碌的一周，留一次深呼吸。" },
+    { "id": "details", "selector": "#details", "text": "杭州 · 山野漫步\n11 月 07 日  09:30—16:00" },
+    { "id": "price", "selector": "#price", "text": "体验价 ￥99 / 人" }
+  ],
+  "styles": { "--paper": "#f4eee4", "--ink": "#233d35", "--accent": "#ad5037", "--title-size": "64px" },
+  "assets": [{ "selector": "#hero", "src": "landscape.svg" }]
+}

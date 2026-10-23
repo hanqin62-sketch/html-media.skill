@@ -1,6 +1,7 @@
 # HTML Media
 
-**v0.2.0：**新增独立原文清单、逐帧基础越界/裁切/隐藏检查，以及三类可复现案例。运行 `npm run demo:checked` 体验，见[案例库](docs/EXAMPLES.md)与[检查说明](skills/html-media/references/inspection.zh-CN.md)。检查不覆盖复杂遮挡或字体缺字，仍需查看成品。
+**v0.3.0：**文案、样式变量与本地图片现可独立配置；同一 HTML 模板更换 JSON 即可复用，原文自动核对。运行 `npm run demo:config`，见[中文配置指南](skills/html-media/references/configuration.zh-CN.md)。
+
 
 **文字可编辑，浏览器负责排版，画面按时间渲染。**
 

@@ -1,5 +1,13 @@
 # Changelog / 更新记录
 
+## 0.3.0 — 2026-10-23
+
+- Added `--config` for reusable templates with separate text, CSS variables, and local image bindings. 新增配置入口，分离模板、文案、样式变量及本地图片。
+- Configured copy automatically feeds exact-copy and per-frame layout inspection. 配置原文自动接入逐字核对与逐帧布局检查。
+- Config-relative paths, literal text insertion, input-file protection, and actionable binding errors. 支持配置相对路径、纯文本写入、输入文件保护及明确的绑定错误。
+- Two city examples share one template; bilingual configuration guides and regression tests included. 两个城市示例共用一个模板，附双语说明和回归测试。
+- Single-config rendering only; font checks and general batch jobs remain planned. 本版提供单配置渲染，字体检查及通用批处理仍在计划中。
+
 ## 0.2.0 — 2026-10-23
 
 - Independent exact-copy manifests with Unicode/whitespace-sensitive comparison. 独立原文清单，核对 Unicode、空白和标点。

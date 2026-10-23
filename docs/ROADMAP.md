@@ -23,7 +23,7 @@ This is a direction for collaboration, not a delivery schedule. Unchecked items 
 ## Then: controlled editing / 随后：可控局部修改
 
 - [ ] Declare editable regions and compare pixels outside those regions. 声明允许修改的区域，检查区域外变化。
-- [ ] Separate content, style, and asset configuration. 分离文案、样式与素材配置。
+- [x] Separate content, style, and local image configuration with reusable templates. 用可复用模板分离文案、样式参数与本地图片配置。
 - [ ] Add reviewed approaches for background restoration and perspective matching. 增加经过验证的底图修复与透视融合流程。
 
 ## Grow from cases / 从案例成长

@@ -6,6 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { PNG } = require('pngjs');
 const { readManifest } = require('../skills/html-media/scripts/inspect.cjs');
+const { readConfig } = require('../skills/html-media/scripts/config.cjs');
 const root = path.resolve(__dirname, '..');
 const parent = path.join(root, '.test-output');
 fs.mkdirSync(parent, { recursive: true });
@@ -81,7 +82,7 @@ test('standalone installer includes dependencies/license and refuses an existing
   const args = [path.join(root, 'scripts', 'install.cjs'), '--dest', destination];
   const installed = spawnSync(process.execPath, args, { encoding: 'utf8', windowsHide: true });
   assert.equal(installed.status, 0, installed.stderr);
-  for (const file of ['SKILL.md', 'LICENSE', 'package-lock.json', 'scripts/render.cjs', 'scripts/inspect.cjs', 'assets/examples/motion.copy.json']) assert(fs.existsSync(path.join(destination, file)));
+  for (const file of ['SKILL.md', 'LICENSE', 'package-lock.json', 'scripts/render.cjs', 'scripts/inspect.cjs', 'scripts/config.cjs', 'assets/examples/motion.copy.json', 'assets/templates/event.html']) assert(fs.existsSync(path.join(destination, file)));
   assert(!fs.existsSync(path.join(destination, 'node_modules')));
   assert.equal(spawnSync(process.execPath, args, { encoding: 'utf8', windowsHide: true }).status, 1);
 });
@@ -154,6 +155,89 @@ test('malformed manifests and unsafe manifest output paths fail before export', 
   const before = fs.readFileSync(file);
   assert.match(render('protected-manifest.png', ['--manifest', file, '--overwrite'], 'inspection', false).result.stderr, /must not replace/);
   assert.deepEqual(fs.readFileSync(file), before);
+});
+
+function configuration(name, overrides = {}) {
+  const asset = path.join(output, 'image space #1.png');
+  const png = new PNG({ width: 1, height: 1 });
+  png.data.set([0, 0, 255, 255]);
+  if (!fs.existsSync(asset)) fs.writeFileSync(asset, PNG.sync.write(png));
+  const file = path.join(output, name);
+  const data = {
+    version: 1, template: path.relative(output, fixture('config')),
+    text: [{ id: 'title', selector: '#title', text: '字 A  B\n<em>原样</em>' }],
+    styles: { '--paper': '#123456' },
+    assets: [{ selector: '#picture', src: './image space #1.png' }], ...overrides
+  };
+  fs.writeFileSync(file, JSON.stringify(data));
+  return file;
+}
+function configured(name, config, options = [], status = 0) {
+  const file = path.join(output, name);
+  const browser = process.env.HTML_MEDIA_TEST_BROWSER ? ['--browser', process.env.HTML_MEDIA_TEST_BROWSER] : [];
+  const result = spawnSync(process.execPath, [renderer, '--config', config, '--out', file, ...inspectionOptions, ...options, ...browser], { cwd: root, encoding: 'utf8', timeout: 90000, windowsHide: true });
+  assert.equal(result.error, undefined, result.error?.message);
+  assert.equal(result.status, status, result.stdout + result.stderr);
+  return { file, result };
+}
+test('config binds literal text, whitespace, CSS variables and local images relative to its own directory', () => {
+  const config = configuration('design.json');
+  const a = configured('configured.png', config, ['--strict-checks']).file;
+  const report = JSON.parse(fs.readFileSync(`${a}.json`));
+  assert.equal(report.inspection.status, 'passed');
+  assert(report.text.includes('字 A  B\n<em>原样</em>'));
+  assert.equal(report.configuration.textLayers, 1);
+  assert.equal(report.configuration.imageBindings, 1);
+  const png = PNG.sync.read(fs.readFileSync(a));
+  assert.deepEqual([...png.data.subarray(0, 4)], [18, 52, 86, 255]);
+  const index = (212 * 320 + 292) * 4;
+  assert.deepEqual([...png.data.subarray(index, index + 4)], [0, 0, 255, 255]);
+  const second = configuration('another.json', { text: [{ id: 'title', selector: '#title', text: 'Another city' }], styles: { '--paper': '#fedcba' } });
+  const b = configured('another.png', second, ['--strict-checks']).file;
+  assert.deepEqual([...PNG.sync.read(fs.readFileSync(b)).data.subarray(0, 4)], [254, 220, 186, 255]);
+  assert.equal(JSON.parse(fs.readFileSync(`${b}.json`)).inspection.status, 'passed');
+});
+test('config catches later animation changes against the original configured copy', () => {
+  const config = configuration('animated.json');
+  const result = configured('configured.mp4', config, ['--strict-checks', '--duration', '0.5', '--fps', '4'], 2);
+  const check = JSON.parse(fs.readFileSync(`${result.file}.json`)).inspection;
+  assert.equal(check.samples, 2);
+  assert.equal(check.findings[0].code, 'text-mismatch');
+  assert.equal(check.findings[0].firstTime, 0.25);
+});
+test('config rejects missing, nonunique, nested and unsuitable targets before writing media', () => {
+  for (const [name, text] of [
+    ['missing-target', [{ id: 'x', selector: '#missing', text: 'x' }]],
+    ['many-targets', [{ id: 'x', selector: 'div', text: 'x' }]],
+    ['nested-targets', [{ id: 'x', selector: '#outer', text: 'x' }, { id: 'y', selector: '#inner', text: 'y' }]],
+    ['unsupported-target', [{ id: 'x', selector: 'script', text: 'x' }]]
+  ]) {
+    const result = configured(`${name}.png`, configuration(`${name}.json`, { text }), [], 1);
+    assert(!fs.existsSync(result.file));
+    assert.match(result.result.stderr, /Config/);
+  }
+});
+test('config rejects misspelled fields, invalid types, URLs, missing assets and ambiguous CLI modes', () => {
+  for (const overrides of [
+    { version: 2 }, { typo: true }, { text: {} }, { text: null }, { styles: null }, { assets: null }, { text: [{ id: 'x', selector: '#title', text: 123 }] },
+    { styles: { color: 'red' } }, { styles: { '--size': 20 } }, { template: 'https://example.com/a.html' },
+    { assets: [{ selector: '#picture', src: 'missing-file.png' }] },
+    { assets: [{ selector: '#picture', src: 'https://example.com/a.png' }] }
+  ]) assert.throws(() => readConfig(configuration('invalid-config.json', overrides)));
+  const config = configuration('valid-config.json');
+  assert.match(configured('ambiguous.png', config, ['--html', fixture('static')], 1).result.stderr, /cannot be combined/);
+  assert.match(configured('ambiguous-manifest.png', config, ['--manifest', 'copy.json'], 1).result.stderr, /cannot be combined/);
+  assert.match(configured('empty-text.png', configuration('empty-text.json', { text: [] }), ['--strict-checks'], 1).result.stderr, /at least one text layer/);
+});
+test('config and configured asset cannot be overwritten by output or report', () => {
+  const config = configuration('config-protected.png.json');
+  const before = fs.readFileSync(config);
+  assert.match(configured('config-protected.png', config, ['--overwrite'], 1).result.stderr, /must not replace/);
+  assert.deepEqual(fs.readFileSync(config), before);
+  const asset = path.join(output, 'image space #1.png');
+  const imageBefore = fs.readFileSync(asset);
+  assert.match(configured(path.basename(asset), config, ['--overwrite'], 1).result.stderr, /must not replace/);
+  assert.deepEqual(fs.readFileSync(asset), imageBefore);
 });
 after(() => {
   if (path.dirname(output) === parent && path.basename(output).startsWith('run-')) fs.rmSync(output, { recursive: true, force: true });

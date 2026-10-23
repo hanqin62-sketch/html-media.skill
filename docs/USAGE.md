@@ -71,3 +71,7 @@ HTML executes JavaScript. Only render inspected or trusted source. HTTP(S) reque
 ## Copy and layout checks
 
 Add `--manifest copy.json --strict-checks` to compare an independent copy manifest and inspect basic text geometry at every exported frame. Strict findings retain media and the JSON report, then exit 2. See the [inspection guide](../skills/html-media/references/inspection.md) for selectors, visibility intervals, and limitations.
+
+## Template configuration
+
+Use `--config design.json --out poster.png --strict-checks` to supply a template, exact copy, CSS variables, and local images in JSON. Configured text supplies its own inspection manifest. See the [configuration guide](../skills/html-media/references/configuration.md).

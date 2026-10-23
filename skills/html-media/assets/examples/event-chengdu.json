@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "template": "../templates/event.html",
+  "text": [
+    { "id": "label", "selector": "#label", "text": "示例活动 / CHENGDU" },
+    { "id": "title", "selector": "#title", "text": "把周末，放慢。" },
+    { "id": "description", "selector": "#description", "text": "在山风里，找回自己的节奏。\n一段轻徒步，一次自然相遇。" },
+    { "id": "details", "selector": "#details", "text": "成都 · 山间慢行\n11 月 14 日  10:00—16:30" },
+    { "id": "price", "selector": "#price", "text": "体验价 ￥129 / 人" }
+  ],
+  "styles": { "--paper": "#e8f1ed", "--ink": "#213e44", "--accent": "#326f76", "--title-size": "60px" },
+  "assets": [{ "selector": "#hero", "src": "landscape.svg" }]
+}

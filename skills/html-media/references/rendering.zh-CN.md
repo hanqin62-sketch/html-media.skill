@@ -42,3 +42,7 @@ node SKILL_DIR/scripts/render.cjs --html scene.html --out cover.jpg --width 1280
 ## 原文与排版检查
 
 渲染时加 `--manifest copy.json --strict-checks`，按独立原文清单检查文字及基础布局；视频逐帧检查。严格模式发现问题时仍保存成品和 JSON 报告，返回退出码 2。选择器、时间区间、检查范围见[检查说明](inspection.zh-CN.md)。
+
+## 模板配置
+
+使用 `--config design.json --out poster.png --strict-checks`，在 JSON 中指定模板、原文、CSS 变量和本地图片。配置中的原文自动用于检查，无需额外清单。完整格式见[配置指南](configuration.zh-CN.md)。

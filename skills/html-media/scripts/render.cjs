@@ -6,10 +6,11 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { spawnSync } = require('node:child_process');
 const { readManifest, inspectFrame, inspectionSummary } = require('./inspect.cjs');
+const { readConfig, applyConfig, sameFile } = require('./config.cjs');
 
 function argumentsFor(argv) {
   const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help', 'strict-checks']);
-  const values = new Set(['html', 'out', 'width', 'height', 'scale', 'time', 'duration', 'fps', 'browser', 'ffmpeg', 'manifest']);
+  const values = new Set(['html', 'out', 'width', 'height', 'scale', 'time', 'duration', 'fps', 'browser', 'ffmpeg', 'manifest', 'config']);
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     if (!argv[i].startsWith('--')) throw new Error(`Unexpected argument: ${argv[i]}`);
@@ -50,20 +51,27 @@ async function launch(chromium, executablePath) {
 async function main() {
   const args = argumentsFor(process.argv.slice(2));
   if (args.help) {
-    console.log('node render.cjs --html scene.html --out image.png|image.jpg|video.mp4 --width 1280 --height 720 [--scale 1] [--time 0] [--duration 4 --fps 30] [--transparent] [--browser PATH] [--ffmpeg PATH] [--overwrite] [--allow-network] [--manifest copy.json] [--strict-checks]');
+    console.log('node render.cjs (--html scene.html | --config design.json) --out image.png|image.jpg|video.mp4 --width 1280 --height 720 [--scale 1] [--time 0] [--duration 4 --fps 30] [--transparent] [--browser PATH] [--ffmpeg PATH] [--overwrite] [--allow-network] [--manifest copy.json (HTML mode only)] [--strict-checks]');
     return;
   }
-  if (!args.html || !args.out) throw new Error('--html and --out are required; use --help.');
-  const input = path.resolve(args.html);
+  if (!args.out || (!args.html && !args.config)) throw new Error('--out and either --html or --config are required; use --help.');
+  if (args.config && (args.html || args.manifest)) throw new Error('--config cannot be combined with --html or --manifest; its text entries supply the copy manifest.');
+  const config = args.config ? readConfig(args.config) : null;
+  const input = config ? config.template : path.resolve(args.html);
   const output = path.resolve(args.out);
   const reportPath = `${output}.json`;
-  if (args['strict-checks'] && !args.manifest) throw new Error('--strict-checks requires --manifest.');
   const manifestPath = args.manifest ? path.resolve(args.manifest) : null;
-  if (manifestPath === output || manifestPath === reportPath) throw new Error('Output must not replace the copy manifest.');
-  const manifest = manifestPath ? readManifest(manifestPath) : null;
+  if (sameFile(manifestPath, output) || sameFile(manifestPath, reportPath)) throw new Error('Output must not replace the copy manifest.');
+  const manifest = config ? config.manifest : manifestPath ? readManifest(manifestPath) : null;
+  if (args['strict-checks'] && !manifest) throw new Error('--strict-checks requires --manifest or a config with at least one text layer.');
+  if (config) {
+    for (const file of [config.source, ...config.images.map(image => image.sourcePath)]) {
+      if (sameFile(file, output) || sameFile(file, reportPath)) throw new Error('Output must not replace a config or configured image asset.');
+    }
+  }
   const inspection = manifest ? inspectionSummary(manifest) : null;
   if (!fs.statSync(input).isFile()) throw new Error('Input must be a local HTML file.');
-  if (input === output || input === reportPath) throw new Error('Output must not replace input HTML.');
+  if (sameFile(input, output) || sameFile(input, reportPath)) throw new Error('Output must not replace input HTML.');
   if (!args.overwrite && (fs.existsSync(output) || fs.existsSync(reportPath))) throw new Error('Output or report exists; choose another path or use --overwrite.');
   const ext = path.extname(output).toLowerCase();
   if (!['.png', '.jpg', '.jpeg', '.mp4'].includes(ext)) throw new Error('Output extension must be .png, .jpg, .jpeg, or .mp4.');
@@ -111,6 +119,7 @@ async function main() {
         ]);
       } finally { clearTimeout(timer); }
     });
+    if (config) await page.evaluate(applyConfig, { text: config.text, styles: config.styles, images: config.images });
     if (video && !await page.evaluate(() => typeof window.renderAt === 'function')) {
       throw new Error('Video HTML must define deterministic window.renderAt(seconds).');
     }
@@ -164,6 +173,7 @@ async function main() {
       source: input, output, cssSize: { width, height }, pixelSize: pixels, scale,
       ...(video ? { frames: count, fps, duration: count / fps, requestedDuration: duration, audio: false } : { time }),
       ...layout,
+      ...(config ? { configuration: { source: config.source, textLayers: config.text.length, styleVariables: Object.keys(config.styles), imageBindings: config.images.length } } : {}),
       ...(inspection ? { inspection: inspection.report() } : {}),
       warnings: ['DOM text and overflow checks do not replace visual inspection of glyphs, clipping, or compositing.', ...(video ? ['Silent MP4; audio is not captured from HTML.'] : [])]
     };

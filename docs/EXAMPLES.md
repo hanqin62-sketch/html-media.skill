@@ -45,6 +45,26 @@ To export only the transparent text layer, make a copy of `overlay.html`, hide `
 
 检查夹具及行为测试覆盖全角标点错误、连续空格变化、嵌套文字隐藏、祖先容器裁切、非唯一选择器，以及仅在第 0.25 秒越界的视频文字。运行 `npm test`；测试要求这些故意有问题的画面被正确发现，测试通过不表示失败案例本身是合格成品。
 
+## Configured template / 配置复用模板
+
+The [event template](../skills/html-media/assets/templates/event.html) is shared by the [Hangzhou config](../skills/html-media/assets/examples/event-hangzhou.json) and [Chengdu config](../skills/html-media/assets/examples/event-chengdu.json). Change the JSON to replace copy, theme colors, title size, or the local image. Configured text automatically drives exact-copy/layout inspection. These are fictional examples with original MIT-licensed artwork and system font fallbacks.
+
+同一个活动模板搭配杭州、成都两份配置；修改 JSON 即可替换文案、主题色、标题字号及本地图片，原文自动接入核对与排版检查。活动内容为演示，底图为原创 MIT 许可素材，字体使用系统回退。
+
+```sh
+npm run demo:config
+```
+
+![Hangzhou configuration / 杭州配置](media/config-hangzhou.png)
+
+![Chengdu configuration / 成都配置](media/config-chengdu.png)
+
+See the [configuration guide](../skills/html-media/references/configuration.md) / [中文配置指南](../skills/html-media/references/configuration.zh-CN.md) for the schema, relative paths, and template requirements. To reproduce one export from the repository:
+
+```sh
+node skills/html-media/scripts/render.cjs --config skills/html-media/assets/examples/event-hangzhou.json --out outputs/event.png --width 1280 --height 720 --strict-checks
+```
+
 ## Prompt: exact-copy poster / 提示词：准确文案海报
 
 > Use $html-media to create a 1080×1440 poster. The title must be exactly “把文字，好好放进画面。” Use a warm paper background, dark green typography, and one orange accent. Return a PNG and editable HTML. Inspect the actual render for missing glyphs, clipping, and copy errors.
