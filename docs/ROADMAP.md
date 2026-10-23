@@ -14,8 +14,9 @@ This is a direction for collaboration, not a delivery schedule. Unchecked items 
 
 ## Next: trustworthy inspection / 下一步：可靠验收
 
-- [ ] Store an exact-copy manifest and compare it with text layers. 保存原文清单并与文字层核对。
-- [ ] Detect clipped or hidden critical text, with explainable findings. 检查关键文字裁切与遮挡，并说明依据。
+- [x] Store an exact-copy manifest and compare it with text layers. 保存原文清单并与文字层核对。
+- [x] Detect basic overflow clipping, viewport overflow, and explicitly hidden critical text. 检查关键文字的基础容器裁切、画布越界与显式隐藏。
+- [ ] Extend inspection to complex occlusion and transformed clipping. 扩展复杂遮挡与变换后裁切的检查。
 - [ ] Add font/glyph coverage checks and optional OCR assistance. 字体字形覆盖检查与可选 OCR 辅助。
 - [ ] Try bounded local repair, preserving the user's content and reporting unresolved problems. 有限次数的局部修正，保留用户内容，明确未解决问题。
 
@@ -27,8 +28,8 @@ This is a direction for collaboration, not a delivery schedule. Unchecked items 
 
 ## Grow from cases / 从案例成长
 
-- [ ] Curate a small licensed example gallery: posters, overlays, and motion titles. 建立许可清晰的海报、图层与动态标题案例库。
-- [ ] Keep minimal failure cases and regression checks beside fixes. 保留最小失败案例和回归检查。
+- [x] Curate a small licensed example gallery: posters, overlays, and motion titles. 建立许可清晰的海报、图层与动态标题案例库。
+- [x] Keep minimal failure cases and regression checks beside fixes. 保留最小失败案例和回归检查。
 - [ ] Add reusable style presets only when useful across multiple real tasks. 在多个真实任务中有用时再沉淀样式模板。
 
 ## Later / 后续探索

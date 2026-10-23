@@ -67,3 +67,7 @@ HTML 必须定义确定性的 `window.renderAt(seconds)`。MP4 当前为无声�
 ## 运行边界
 
 HTML 会执行 JavaScript，只运行经过检查或可信的源码。HTTP(S) 请求拦截不是完整沙箱；处理不可信内容应使用额外隔离环境。渲染器不使用个人浏览器登录资料，也不会把作品发送给云渲染服务；允许联网后，远程素材可能联系其提供方。
+
+## 原文与排版检查
+
+渲染时加 `--manifest copy.json --strict-checks`，按独立原文清单检查文字及基础布局；视频逐帧检查。严格模式发现问题时仍保存成品和 JSON 报告，返回退出码 2。选择器、时间区间、检查范围见[检查说明](../skills/html-media/references/inspection.zh-CN.md)。

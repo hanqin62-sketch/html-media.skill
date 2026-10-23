@@ -67,3 +67,7 @@ The installer intentionally refuses an existing destination. Review the upstream
 ## Trust model
 
 HTML executes JavaScript. Only render inspected or trusted source. HTTP(S) request blocking is not a complete sandbox; for untrusted workloads, supply an appropriate isolated environment. Browser contexts do not use your signed-in profile. This project does not send artifacts to a hosted rendering service, but explicit remote assets may contact their providers when networking is enabled.
+
+## Copy and layout checks
+
+Add `--manifest copy.json --strict-checks` to compare an independent copy manifest and inspect basic text geometry at every exported frame. Strict findings retain media and the JSON report, then exit 2. See the [inspection guide](../skills/html-media/references/inspection.md) for selectors, visibility intervals, and limitations.

@@ -32,3 +32,7 @@ The adjacent `.json` report includes dimensions, time/frame metadata, DOM text, 
 Place the original image at its native size and share its coordinate system with text layers. Keep edits local. If old lettering is baked into a photo, restore the background first; simply adding new lettering leaves ghosts. Match plane perspective with CSS/SVG transforms and use more specialized deformation for curved surfaces. Check shadows, occlusion, blur, and grain. Use PNG for lossless image delivery.
 
 Official reference: [Playwright screenshots](https://playwright.dev/docs/screenshots).
+
+## Copy and layout checks
+
+Add `--manifest copy.json --strict-checks` to compare an independent copy manifest and inspect basic text geometry at every exported frame. Strict findings retain media and the JSON report, then exit 2. See the [inspection guide](inspection.md) for selectors, visibility intervals, and limitations.

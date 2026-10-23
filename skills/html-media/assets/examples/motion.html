@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8">
+<title>逐帧可验 / Inspect every frame</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{background:#172d2b;color:#f4efdc;font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+.label{position:absolute;left:7%;top:12%;font-size:18px;letter-spacing:4px;color:#a0c1b7}
+#title{position:absolute;left:7%;top:32%;margin:0;font-size:64px;line-height:1.45}
+#caption{position:absolute;left:7%;top:59%;margin:0;font-size:24px;line-height:1.5;color:#c9d4c4}
+.circle{position:absolute;right:8%;top:22%;width:230px;height:230px;border:2px solid #6d968a;border-radius:50%}
+.dot{position:absolute;right:14%;top:35%;width:70px;height:70px;background:#ed794c;border-radius:50%}
+#progress{position:absolute;left:7%;bottom:13%;height:3px;background:#ed794c}
+</style>
+<div class="label">HTML MEDIA / MOTION STUDY 02</div>
+<div class="circle"></div><div class="dot"></div>
+<h1 id="title">让每一帧，都有章法。</h1><p id="caption">文案不变，时间有序。</p><div id="progress"></div>
+<script>
+window.renderAt=t=>{
+  const p=Math.max(0,Math.min(1,t/0.8));
+  const ease=1-(1-p)**3;
+  for(const id of ['title','caption']){
+    const el=document.getElementById(id);
+    el.style.opacity=String(p);
+    el.style.transform=`translateY(${(1-ease)*24}px)`;
+  }
+  document.getElementById('progress').style.width=`${Math.max(0,Math.min(1,t/3.9))*86}%`;
+};
+window.renderAt(0);
+</script></html>

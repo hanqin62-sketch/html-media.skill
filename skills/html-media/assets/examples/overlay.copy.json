@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "layers": [
+    { "id": "label", "selector": ".label", "text": "WEEKEND / 山野来信" },
+    { "id": "title", "selector": "h1", "text": "给生活，留一点空白。" },
+    { "id": "caption", "selector": "p", "text": "沿着山风走，慢慢看世界。" }
+  ]
+}

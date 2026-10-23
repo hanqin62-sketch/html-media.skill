@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8">
+<style>
+html,body{margin:0;width:320px;height:240px;font:16px/24px monospace}
+.item{position:absolute;left:12px;top:12px;white-space:pre}
+#outside{left:310px;top:50px}#clip{position:absolute;left:12px;top:90px;width:25px;height:30px;overflow:hidden}
+#hidden{top:130px;opacity:0}#partial{top:160px}#partial span{display:none}
+#late{top:200px}#wrong{top:40px}
+</style>
+<div id="good" class="item">字 A  B<br>￥19.90！</div>
+<div id="wrong" class="item">🙂标点!</div>
+<div id="outside" class="item">OUTSIDE</div>
+<div id="clip"><span id="clipped">CLIPPED TEXT</span></div>
+<div id="hidden" class="item">HIDDEN</div>
+<div id="partial" class="item">PART<span>HIDDEN</span></div>
+<div id="late" class="item">TIMELINE</div>
+<script>window.renderAt=t=>{document.querySelector('#late').style.left=t===0.25?'310px':'12px';};</script>

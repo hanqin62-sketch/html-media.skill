@@ -5,10 +5,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { spawnSync } = require('node:child_process');
+const { readManifest, inspectFrame, inspectionSummary } = require('./inspect.cjs');
 
 function argumentsFor(argv) {
-  const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help']);
-  const values = new Set(['html', 'out', 'width', 'height', 'scale', 'time', 'duration', 'fps', 'browser', 'ffmpeg']);
+  const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help', 'strict-checks']);
+  const values = new Set(['html', 'out', 'width', 'height', 'scale', 'time', 'duration', 'fps', 'browser', 'ffmpeg', 'manifest']);
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     if (!argv[i].startsWith('--')) throw new Error(`Unexpected argument: ${argv[i]}`);
@@ -49,13 +50,18 @@ async function launch(chromium, executablePath) {
 async function main() {
   const args = argumentsFor(process.argv.slice(2));
   if (args.help) {
-    console.log('node render.cjs --html scene.html --out image.png|image.jpg|video.mp4 --width 1280 --height 720 [--scale 1] [--time 0] [--duration 4 --fps 30] [--transparent] [--browser PATH] [--ffmpeg PATH] [--overwrite] [--allow-network]');
+    console.log('node render.cjs --html scene.html --out image.png|image.jpg|video.mp4 --width 1280 --height 720 [--scale 1] [--time 0] [--duration 4 --fps 30] [--transparent] [--browser PATH] [--ffmpeg PATH] [--overwrite] [--allow-network] [--manifest copy.json] [--strict-checks]');
     return;
   }
   if (!args.html || !args.out) throw new Error('--html and --out are required; use --help.');
   const input = path.resolve(args.html);
   const output = path.resolve(args.out);
   const reportPath = `${output}.json`;
+  if (args['strict-checks'] && !args.manifest) throw new Error('--strict-checks requires --manifest.');
+  const manifestPath = args.manifest ? path.resolve(args.manifest) : null;
+  if (manifestPath === output || manifestPath === reportPath) throw new Error('Output must not replace the copy manifest.');
+  const manifest = manifestPath ? readManifest(manifestPath) : null;
+  const inspection = manifest ? inspectionSummary(manifest) : null;
   if (!fs.statSync(input).isFile()) throw new Error('Input must be a local HTML file.');
   if (input === output || input === reportPath) throw new Error('Output must not replace input HTML.');
   if (!args.overwrite && (fs.existsSync(output) || fs.existsSync(reportPath))) throw new Error('Output or report exists; choose another path or use --overwrite.');
@@ -129,6 +135,7 @@ async function main() {
         } finally { clearTimeout(timer); }
       }, seconds);
       if (issues.length) throw new Error([...new Set(issues)].join('\n'));
+      if (inspection) inspection.add(seconds, await page.evaluate(inspectFrame, { layers: manifest.layers, seconds }));
     };
     const shotOptions = { type: ext === '.jpg' || ext === '.jpeg' ? 'jpeg' : 'png', animations: 'allow', omitBackground: Boolean(args.transparent), scale: 'device' };
     if (shotOptions.type === 'jpeg') shotOptions.quality = 95;
@@ -157,10 +164,15 @@ async function main() {
       source: input, output, cssSize: { width, height }, pixelSize: pixels, scale,
       ...(video ? { frames: count, fps, duration: count / fps, requestedDuration: duration, audio: false } : { time }),
       ...layout,
+      ...(inspection ? { inspection: inspection.report() } : {}),
       warnings: ['DOM text and overflow checks do not replace visual inspection of glyphs, clipping, or compositing.', ...(video ? ['Silent MP4; audio is not captured from HTML.'] : [])]
     };
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), { encoding: 'utf8', flag: args.overwrite ? 'w' : 'wx' });
     console.log(JSON.stringify({ output, report: reportPath, pixelSize: pixels, ...(video ? { frames: count, duration: count / fps } : {}) }, null, 2));
+    if (inspection && inspection.report().status === 'failed') {
+      console.error('HTML media: inspection found issues; review the media and adjacent JSON report.');
+      if (args['strict-checks']) process.exitCode = 2;
+    }
   } finally {
     try { if (browser) await browser.close(); }
     finally {

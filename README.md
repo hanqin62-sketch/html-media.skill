@@ -1,5 +1,7 @@
 # HTML Media
 
+**v0.2.0:** Independent exact-copy manifests, per-frame basic overflow/clipping/hiding checks, and three reproducible examples. Try `npm run demo:checked`; see the [gallery](docs/EXAMPLES.md) and [inspection guide](skills/html-media/references/inspection.md). Complex occlusion and font coverage still require visual review.
+
 **Editable text. Browser-rendered images. Deterministic motion.**
 
 [简体中文](README.zh-CN.md) · [Contributing](CONTRIBUTING.md) · [Roadmap](docs/ROADMAP.md) · [Examples](docs/EXAMPLES.md)

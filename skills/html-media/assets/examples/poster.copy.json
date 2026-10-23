@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "layers": [
+    { "id": "title", "selector": "h1", "text": "把文字，\n好好放进画面。" },
+    { "id": "subtitle", "selector": ".sub", "text": "中文、数字、标点，各在其位。\n静态成图，动态成片。" }
+  ]
+}

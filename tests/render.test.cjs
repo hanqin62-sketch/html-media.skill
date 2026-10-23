@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { PNG } = require('pngjs');
+const { readManifest } = require('../skills/html-media/scripts/inspect.cjs');
 const root = path.resolve(__dirname, '..');
 const parent = path.join(root, '.test-output');
 fs.mkdirSync(parent, { recursive: true });
@@ -80,9 +81,79 @@ test('standalone installer includes dependencies/license and refuses an existing
   const args = [path.join(root, 'scripts', 'install.cjs'), '--dest', destination];
   const installed = spawnSync(process.execPath, args, { encoding: 'utf8', windowsHide: true });
   assert.equal(installed.status, 0, installed.stderr);
-  for (const file of ['SKILL.md', 'LICENSE', 'package-lock.json', 'scripts/render.cjs']) assert(fs.existsSync(path.join(destination, file)));
+  for (const file of ['SKILL.md', 'LICENSE', 'package-lock.json', 'scripts/render.cjs', 'scripts/inspect.cjs', 'assets/examples/motion.copy.json']) assert(fs.existsSync(path.join(destination, file)));
   assert(!fs.existsSync(path.join(destination, 'node_modules')));
   assert.equal(spawnSync(process.execPath, args, { encoding: 'utf8', windowsHide: true }).status, 1);
+});
+
+function manifest(name, layers) {
+  const file = path.join(output, name);
+  fs.writeFileSync(file, JSON.stringify({ version: 1, layers }));
+  return file;
+}
+const inspectionOptions = ['--width', '320', '--height', '240'];
+test('exact copy preserves Chinese, punctuation, repeated spaces, and explicit line breaks', () => {
+  const file = manifest('exact.json', [{ id: 'good', selector: '#good', text: '字 A  B\n￥19.90！' }]);
+  const image = render('exact.png', [...inspectionOptions, '--manifest', file, '--strict-checks'], 'inspection').file;
+  const report = JSON.parse(fs.readFileSync(`${image}.json`));
+  assert.equal(report.inspection.status, 'passed');
+  assert.equal(report.inspection.layoutSamples.good, 1);
+  assert.deepEqual(report.inspection.findings, []);
+});
+test('strict inspection retains reviewable output and reports precise copy/geometry failures', () => {
+  const layers = [
+    { id: 'wrong', selector: '#wrong', text: '🙂标点！' },
+    { id: 'spaces', selector: '#good', text: '字 A B\n￥19.90！' },
+    ...['outside', 'clipped', 'hidden', 'partial'].map(id => ({ id, selector: `#${id}`, text: { outside: 'OUTSIDE', clipped: 'CLIPPED TEXT', hidden: 'HIDDEN', partial: 'PARTHIDDEN' }[id] })),
+    { id: 'missing', selector: '#missing', text: 'MISSING' },
+    { id: 'duplicate', selector: '.item', text: 'DUPLICATE' },
+    { id: 'invalid', selector: '[', text: '' }
+  ];
+  const file = manifest('failures.json', layers);
+  const result = render('failures.png', [...inspectionOptions, '--manifest', file, '--strict-checks'], 'inspection', false);
+  assert.equal(result.result.status, 2);
+  assert(fs.existsSync(result.file));
+  const findings = JSON.parse(fs.readFileSync(`${result.file}.json`)).inspection.findings;
+  const has = (id, code) => assert(findings.some(f => f.id === id && f.code === code), `${id}: ${code}`);
+  has('wrong', 'text-mismatch'); has('spaces', 'text-mismatch'); has('outside', 'outside-viewport');
+  has('clipped', 'clipped-text'); has('hidden', 'hidden-text'); has('partial', 'hidden-text');
+  has('missing', 'selector-count'); has('duplicate', 'selector-count'); has('invalid', 'invalid-selector');
+  assert.deepEqual(findings.find(f => f.id === 'wrong' && f.code === 'text-mismatch').firstDifference, { index: 3, expected: '！', actual: '!' });
+});
+test('inspection warns without strict mode and respects intentional visibility windows', () => {
+  const file = manifest('window.json', [
+    { id: 'hidden', selector: '#hidden', text: 'HIDDEN', visibleFrom: 1 },
+    { id: 'wrong', selector: '#wrong', text: '🙂标点！', visibleFrom: 1 }
+  ]);
+  const result = render('window.png', [...inspectionOptions, '--manifest', file], 'inspection');
+  const check = JSON.parse(fs.readFileSync(`${result.file}.json`)).inspection;
+  assert.equal(check.status, 'failed');
+  assert.equal(check.layoutSamples.hidden, 0);
+  assert.deepEqual(check.findings.map(f => f.code), ['text-mismatch']);
+});
+test('video inspection catches a middle-frame overflow even when the final frame is correct', () => {
+  const file = manifest('timeline.json', [{ id: 'late', selector: '#late', text: 'TIMELINE' }]);
+  const result = render('timeline.mp4', [...inspectionOptions, '--manifest', file, '--strict-checks', '--duration', '0.75', '--fps', '4'], 'inspection', false);
+  assert.equal(result.result.status, 2);
+  const check = JSON.parse(fs.readFileSync(`${result.file}.json`)).inspection;
+  assert.equal(check.samples, 3);
+  assert.equal(check.layoutSamples.late, 3);
+  const finding = check.findings.find(f => f.code === 'outside-viewport');
+  assert.equal(finding.firstTime, 0.25);
+  assert.equal(finding.lastTime, 0.25);
+  assert.equal(finding.occurrences, 1);
+});
+test('malformed manifests and unsafe manifest output paths fail before export', () => {
+  const layer = { id: 'a', selector: '#good', text: 'A' };
+  for (const layers of [[layer, layer], [{ ...layer, text: 4 }], [{ ...layer, visibleFrom: 2, visibleUntil: 1 }], []]) {
+    const file = manifest('malformed.json', layers);
+    assert.throws(() => readManifest(file));
+  }
+  assert.match(render('no-manifest.png', ['--strict-checks'], 'inspection', false).result.stderr, /requires --manifest/);
+  const file = manifest('protected-manifest.png.json', [layer]);
+  const before = fs.readFileSync(file);
+  assert.match(render('protected-manifest.png', ['--manifest', file, '--overwrite'], 'inspection', false).result.stderr, /must not replace/);
+  assert.deepEqual(fs.readFileSync(file), before);
 });
 after(() => {
   if (path.dirname(output) === parent && path.basename(output).startsWith('run-')) fs.rmSync(output, { recursive: true, force: true });

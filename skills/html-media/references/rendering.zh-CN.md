@@ -38,3 +38,7 @@ node SKILL_DIR/scripts/render.cjs --html scene.html --out cover.jpg --width 1280
 将原图作为同尺寸绝对定位的底图，文字层使用相同坐标系。尽量缩小修改区域。如果旧文字已经烘焙到照片里，单纯叠新文字会留下残影；先完成底图修复。倾斜平面可用 CSS/SVG 变换，曲面文字可能需要路径或网格变形；处理阴影、遮挡和噪声后再导出。需要无损交付时用 PNG。
 
 官方参考：[Playwright 截图](https://playwright.dev/docs/screenshots)。
+
+## 原文与排版检查
+
+渲染时加 `--manifest copy.json --strict-checks`，按独立原文清单检查文字及基础布局；视频逐帧检查。严格模式发现问题时仍保存成品和 JSON 报告，返回退出码 2。选择器、时间区间、检查范围见[检查说明](inspection.zh-CN.md)。

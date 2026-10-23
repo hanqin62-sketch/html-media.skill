@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "layers": [
+    { "id": "title", "selector": "#title", "text": "让每一帧，都有章法。", "visibleFrom": 0.8 },
+    { "id": "caption", "selector": "#caption", "text": "文案不变，时间有序。", "visibleFrom": 0.8 }
+  ]
+}

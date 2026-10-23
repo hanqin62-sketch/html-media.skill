@@ -56,3 +56,4 @@ jobs:
         run: node "${{ runner.temp }}/html-media/scripts/render.cjs" --html "${{ runner.temp }}/html-media/assets/scene.html" --out outputs/installed.png --width 1280 --height 720 --time 1.5
       - run: npm run demo:image
       - run: npm run demo:video
+      - run: npm run demo:checked

@@ -15,6 +15,36 @@ npm run demo:image
 npm run demo:video
 ```
 
+## Checked gallery / 带检查的案例库
+
+Run `npm run demo:checked` after installing the dependencies. It exports three 1280×720 PNGs and a 4-second, 24 fps silent motion-title MP4 into `outputs/`. Every export uses an independent copy manifest and strict checks; CI runs the same command. Set `HTML_MEDIA_TEST_BROWSER` to a browser executable only if automatic discovery is unavailable.
+
+安装依赖后运行 `npm run demo:checked`，在 `outputs/` 输出三张 1280×720 PNG 和一个 4 秒、24 帧/秒的无声动态标题 MP4。每个成品均使用独立原文清单及严格检查；CI 也执行此命令。自动找不到浏览器时可设置 `HTML_MEDIA_TEST_BROWSER` 为浏览器路径。
+
+| Case / 案例 | Editable source / 源码 | Copy / 原文清单 | Purpose / 用途 |
+| --- | --- | --- | --- |
+| Poster / 海报 | [scene.html](../skills/html-media/assets/scene.html) | [poster.copy.json](../skills/html-media/assets/examples/poster.copy.json) | Chinese text and explicit line breaks / 中文与显式换行 |
+| Image overlay / 图上叠字 | [overlay.html](../skills/html-media/assets/examples/overlay.html) | [overlay.copy.json](../skills/html-media/assets/examples/overlay.copy.json) | Native-size background and separate text / 原尺寸底图与独立文字 |
+| Motion title / 动态标题 | [motion.html](../skills/html-media/assets/examples/motion.html) | [motion.copy.json](../skills/html-media/assets/examples/motion.copy.json) | Deterministic fade/slide and visibility windows / 确定性淡入移动与可见时间区间 |
+
+![Image overlay / 图上叠字](media/overlay.png)
+
+![Motion title held frame / 动态标题停留帧](media/motion-title.png)
+
+The overlay background is an original [SVG landscape](../skills/html-media/assets/examples/landscape.svg), not a photograph. All gallery HTML/CSS/SVG sources are project-authored and MIT licensed. Fonts use system fallbacks and are not redistributed. For a real photo, replace the background with a user-authorized asset and match its native dimensions; this case does not remove old lettering or restore backgrounds automatically.
+
+叠字底图是项目原创的 SVG 风景插画，不是照片。所有案例 HTML/CSS/SVG 源码使用 MIT 许可；字体使用系统回退，不附带字体文件。实际照片请换成用户授权的素材并匹配原尺寸；该案例不自动去旧字或修复背景。
+
+To export only the transparent text layer, make a copy of `overlay.html`, hide `#source`, keep the CSS background transparent, and render with `--transparent`; retain the manifest. See [inspection rules](../skills/html-media/references/inspection.md) / [中文核对规则](../skills/html-media/references/inspection.zh-CN.md).
+
+导出透明文字层时，复制 `overlay.html`，隐藏 `#source`、保持 CSS 背景透明，再用 `--transparent` 渲染，继续保留原文清单。
+
+## Reproducible failures / 可复现的失败案例
+
+[Inspection fixture](../tests/fixtures/inspection.html) and [behavioral tests](../tests/render.test.cjs) demonstrate full-width punctuation mistakes, repeated-space changes, hidden nested spans, ancestor clipping, nonunique selectors, and a video layer that exits the viewport only at 0.25 seconds. Run `npm test`; these deliberately broken scenes must produce the expected findings, so a passing test does not mean the fixture itself is valid artwork.
+
+检查夹具及行为测试覆盖全角标点错误、连续空格变化、嵌套文字隐藏、祖先容器裁切、非唯一选择器，以及仅在第 0.25 秒越界的视频文字。运行 `npm test`；测试要求这些故意有问题的画面被正确发现，测试通过不表示失败案例本身是合格成品。
+
 ## Prompt: exact-copy poster / 提示词：准确文案海报
 
 > Use $html-media to create a 1080×1440 poster. The title must be exactly “把文字，好好放进画面。” Use a warm paper background, dark green typography, and one orange accent. Return a PNG and editable HTML. Inspect the actual render for missing glyphs, clipping, and copy errors.
