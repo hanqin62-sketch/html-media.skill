@@ -2,6 +2,8 @@
 
 [简体中文](configuration.zh-CN.md)
 
+Optional `layout` adds draggable single-scene nodes and connections. See the [editor guide](editor.md) for its schema, template contract and export behavior. When present, it supplies default canvas dimensions; explicit CLI dimensions must match.
+
 Use `--config design.json` when a composition should be reused with different approved copy, style parameters, or image assets. Keep layout in an HTML template and store content separately. The renderer applies configuration in memory; it leaves the source files intact. Deliver the template, JSON, and referenced assets together, plus the exported media.
 
 ```json
@@ -21,7 +23,7 @@ Use `--config design.json` when a composition should be reused with different ap
 node SKILL_DIR/scripts/render.cjs --config design.json --out poster.png --width 1280 --height 720 --strict-checks
 ```
 
-`version` and `template` are required. `text`, `styles`, and `assets` are optional; their defaults are `[]`, `{}`, and `[]`. Unknown fields, wrong types, missing files, invalid selectors, and bindings that do not match exactly one element fail with exit 1. Dimensions, time, output format, network policy, and overwrite policy remain explicit CLI options. `--config` cannot be combined with `--html` or `--manifest`.
+`version` and `template` are required. `text`, `styles`, and `assets` are optional; their defaults are `[]`, `{}`, and `[]`. Optional fonts and layout have dedicated guides. Unknown fields, wrong types, missing files, invalid selectors, and bindings that do not match exactly one element fail with exit 1. Dimensions use CLI defaults unless layout supplies a canvas; time, output format, network policy and overwrite policy remain CLI options. `--config` cannot be combined with `--html` or `--manifest`.
 
 ## Template and paths
 

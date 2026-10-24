@@ -79,3 +79,7 @@ HTML 会执行 JavaScript，只运行经过检查或可信的源码。HTTP(S) �
 ## 字体与批量输出
 
 用 `--check-fonts` 观察实际字体，`--strict-fonts` 强制处理字体问题。批量任务通过 `scripts/batch.cjs` 执行，输出 HTML 预览和 JSON 摘要。详见[字体检查](../skills/html-media/references/fonts.zh-CN.md)和[批量指南](../skills/html-media/references/batch.zh-CN.md)。
+
+## 导出前调整布局
+
+运行 `npm run demo:editor` 打开 DNS 示例，或使用 `node skills/html-media/scripts/editor.cjs --config design.json --out-dir outputs/new-edit-session`，打开打印的本地地址。支持拖动、组合、撤销、保存和导出。配置需要声明可编辑节点与连线，详见[布局编辑指南](../skills/html-media/references/editor.zh-CN.md)。本版在指定静帧时间编辑单页面，尚无播放或时间轴控件。

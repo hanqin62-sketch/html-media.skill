@@ -1,6 +1,6 @@
 # HTML Media
 
-**v0.4.0：**新增实际字体观察、本地字体缺字检查、批量渲染和可视化汇总报告。运行 `npm run demo:batch`，阅读[字体指南](skills/html-media/references/fonts.zh-CN.md)和[批量指南](skills/html-media/references/batch.zh-CN.md)。
+**v0.5.0：**新增单页面布局编辑器：拖动、组合、撤销、连线与运动路径联动，保存后导出图片或无声视频。运行 `npm run demo:editor`，打开终端打印的本地地址；阅读[布局编辑指南](skills/html-media/references/editor.zh-CN.md)。保留 v0.4.0 的字体检查、批量渲染及报告功能。
 
 
 

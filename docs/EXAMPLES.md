@@ -2,6 +2,14 @@
 
 [English home](../README.md) · [中文首页](../README.zh-CN.md)
 
+## Interactive layout / 交互布局
+
+Run `npm run demo:editor`, then open the printed loopback URL. The original MIT-licensed [DNS template](../skills/html-media/assets/templates/network.html) and [layout config](../skills/html-media/assets/examples/network.json) demonstrate grouped icon/label movement, linked lines and deterministic message motion. Save a new config revision or export directly. This is an illustrative animation, not a complete DNS protocol simulation. See the [editor guide](../skills/html-media/references/editor.md) / [中文指南](../skills/html-media/references/editor.zh-CN.md).
+
+运行命令后打开终端中的本地地址，拖动主机，连线及消息路径随之更新。可以组合、撤销、保存新配置并导出。示例为原创 MIT 许可作品，仅用于展示布局联动，不是完整的 DNS 协议模拟。
+
+![Single-scene layout editor / 单页面布局编辑器](media/layout-editor.png)
+
 ## Included demo / 内置示例
 
 [Editable scene](../skills/html-media/assets/scene.html) · [PNG](media/poster.png) · [4-second silent MP4](media/motion.mp4)

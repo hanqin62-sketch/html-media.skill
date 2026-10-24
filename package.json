@@ -1,6 +1,6 @@
 {
   "name": "html-media-workspace",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Develop and validate the HTML Media agent skill",
   "license": "MIT",
@@ -9,14 +9,15 @@
   },
   "scripts": {
     "validate": "node scripts/validate.cjs",
-    "test": "node --test --test-concurrency=1 tests/render.test.cjs",
+    "test": "node --test --test-concurrency=1 tests/render.test.cjs tests/editor.test.cjs",
     "render": "node skills/html-media/scripts/render.cjs",
     "demo:image": "npm run render -- --html skills/html-media/assets/scene.html --out outputs/poster.png --width 1280 --height 720 --time 1.5 --overwrite",
     "demo:video": "npm run render -- --html skills/html-media/assets/scene.html --out outputs/motion.mp4 --width 1280 --height 720 --duration 4 --fps 24 --overwrite",
     "install:skill": "node scripts/install.cjs",
     "demo:checked": "node scripts/examples.cjs",
     "demo:config": "node scripts/config-examples.cjs",
-    "demo:batch": "node scripts/batch-example.cjs"
+    "demo:batch": "node scripts/batch-example.cjs",
+    "demo:editor": "node scripts/editor-example.cjs"
   },
   "devDependencies": {
     "fontkit": "2.0.4",

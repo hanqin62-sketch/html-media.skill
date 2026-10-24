@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>DNS · 可编辑拓扑示例</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f9f4;font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:#24483c}#scene{background:#f7f9f4}.heading{position:absolute;left:42px;top:30px}.eyebrow{font-size:11px;letter-spacing:3px;color:#7a927e}.heading h1{font-size:28px;margin:10px 0 0;font-weight:600}.note{position:absolute;left:42px;bottom:24px;font-size:12px;color:#7c8e7f}#wires{z-index:0;pointer-events:none}line{stroke:#9aae9b;stroke-width:2}.node{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;border:1px solid #ceddcb;border-radius:15px;background:#fffef8;box-shadow:0 5px 0 #dce6d536;z-index:1}.node .label{font-size:16px;font-weight:600}.device{width:49px;height:57px;border:2px solid #547b60;border-radius:5px;background:#e8f0df;display:grid;gap:4px;padding:5px}.device i{position:relative;border:1px solid #7d9c80;border-radius:2px}.device i:after{content:'';position:absolute;right:4px;top:4px;width:4px;height:4px;border-radius:50%;background:#749a70}.client .device{height:43px;width:62px;border:3px solid #547b60;position:relative;margin-bottom:14px;background:#e4eee8}.client .device:after{content:'';position:absolute;bottom:-13px;left:8px;width:40px;height:4px;background:#547b60}.client{background:#eef5eb;border-color:#b4c9ad}#signal{position:absolute;width:28px;height:21px;z-index:3;pointer-events:none;background:#f3ce80;border:1.5px solid #a8813c;border-radius:3px;left:0;top:0}#signal:after{content:'';position:absolute;width:17px;height:17px;border-right:1px solid #a8813c;border-bottom:1px solid #a8813c;transform:rotate(45deg);left:4px;top:-8px}
+</style></head><body><main id="scene">
+<div class="heading"><div class="eyebrow">NETWORK / DNS</div><h1 id="title">一次域名查询的旅程</h1></div>
+<svg id="wires" aria-hidden="true"><line id="client-local"/><line id="local-root"/><line id="local-cn"/><line id="local-edu"/></svg>
+<div class="node client" id="client"><div class="device"></div><span class="label" id="client-label">用户主机</span></div>
+<div class="node" id="local"><div class="device"><i></i><i></i><i></i></div><span class="label" id="local-label">本地域名服务器</span></div>
+<div class="node" id="root"><div class="device"><i></i><i></i><i></i></div><span class="label" id="root-label">根域名服务器</span></div>
+<div class="node" id="cn"><div class="device"><i></i><i></i><i></i></div><span class="label" id="cn-label">cn 顶级域名服务器</span></div>
+<div class="node" id="edu"><div class="device"><i></i><i></i><i></i></div><span class="label" id="edu-label">edu.cn 权威服务器</span></div>
+<div id="signal" aria-label="查询消息"></div><div class="note" id="note">布局与路径联动示例 · 查询动画为示意</div>
+</main><script>
+window.renderAt = seconds => {
+  if (!window.htmlMediaLayout) return;
+  const connections=['client-local','local-root','local-cn','local-edu'];
+  const time=Math.max(0,seconds), id=connections[Math.floor(time/2)%connections.length];
+  const p=window.htmlMediaLayout.pointOnConnection(id,(time%2)/2);
+  document.getElementById('signal').style.transform=`translate(${p.x-14}px,${p.y-10.5}px)`;
+};
+</script></body></html>

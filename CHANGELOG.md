@@ -1,5 +1,13 @@
 # Changelog / 更新记录
 
+## 0.5.0 — 2026-10-24
+
+- Single-scene local layout editor with dragging, multi-selection, grouping, center guides, coordinate fields, undo/redo and reset. 新增单页面本地布局编辑器，支持拖动、多选、组合、中心参考线、坐标微调、撤销重做与恢复初稿。
+- Shared layout configuration and connection-point API keep node labels, SVG lines and authored motion aligned during editing and export. 共享布局与连线位置接口，让节点文字、SVG 连线和适配后的动画联动。
+- Save new config revisions and export PNG/JPEG/silent MP4 with the existing renderer and inspection reports. 保存独立配置版本，使用现有渲染器及检查报告导出图片和无声视频。
+- Original DNS example, bilingual authoring guides and browser interaction/export regression tests. 附原创 DNS 示例、双语编写指南及浏览器交互/导出回归测试。
+- Declared HTML scenes only; no arbitrary MP4 editing, multi-scene timeline or automatic reconstruction. 仅支持声明好的 HTML 场景；尚不支持任意 MP4 编辑、多场景时间轴或自动重建。
+
 ## 0.4.0 — 2026-10-23
 
 - Actual browser font usage, configured local FontFace loading, code-point coverage, and opt-in strict font findings. 新增实际字体观察、本地字体加载、码点覆盖检查及可选严格模式。

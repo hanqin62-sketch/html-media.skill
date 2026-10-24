@@ -79,3 +79,7 @@ Use `--config design.json --out poster.png --strict-checks` to supply a template
 ## Fonts and batch output
 
 Use `--check-fonts` for actual font usage and `--strict-fonts` to enforce findings. Run configured jobs through `scripts/batch.cjs` for HTML previews and JSON summaries. See [font checks](../skills/html-media/references/fonts.md) and [batch usage](../skills/html-media/references/batch.md).
+
+## Arrange a scene before export
+
+Run `npm run demo:editor` for the DNS example, or `node skills/html-media/scripts/editor.cjs --config design.json --out-dir outputs/new-edit-session`. Open the printed URL to drag, group, undo, save and export. Configs require declared layout nodes and connections; see the [layout editor guide](../skills/html-media/references/editor.md). This version edits one scene at a selected still time; it has no playback/timeline controls.

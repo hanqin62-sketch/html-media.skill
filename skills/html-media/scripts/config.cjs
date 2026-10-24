@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { validateManifest } = require('./inspect.cjs');
+const { validateLayout } = require('./layout.cjs');
 
 function object(value, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object.`);
@@ -20,7 +21,7 @@ function readConfig(file) {
   const source = path.resolve(file);
   const data = JSON.parse(fs.readFileSync(source, 'utf8').replace(/^\uFEFF/, ''));
   object(data, 'Config');
-  keys(data, ['version', 'template', 'text', 'styles', 'assets', 'fonts'], 'Config');
+  keys(data, ['version', 'template', 'text', 'styles', 'assets', 'fonts', 'layout'], 'Config');
   if (data.version !== 1) throw new Error('Config requires version: 1.');
   const base = path.dirname(source);
   const template = localFile(data.template, base, 'template');
@@ -57,7 +58,8 @@ function readConfig(file) {
     return { ...def, sourcePath: localFile(def.src, base, 'Font src') };
   });
   for (const layer of text) if (layer.fontId !== undefined && !ids.has(layer.fontId)) throw new Error(`Unknown fontId for ${layer.id}.`);
-  return { source, template, text, styles, images, fonts, manifest };
+  const layout = data.layout === undefined ? null : validateLayout(data.layout);
+  return { source, template, text, styles, images, fonts, manifest, layout };
 }
 
 // Runs after template readiness and before renderAt / asset decoding.

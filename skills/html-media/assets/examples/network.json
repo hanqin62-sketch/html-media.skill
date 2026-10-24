@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "template": "../templates/network.html",
+  "text": [
+    { "id": "title", "selector": "#title", "text": "一次域名查询的旅程" },
+    { "id": "client", "selector": "#client-label", "text": "用户主机" },
+    { "id": "local", "selector": "#local-label", "text": "本地域名服务器" },
+    { "id": "root", "selector": "#root-label", "text": "根域名服务器" },
+    { "id": "cn", "selector": "#cn-label", "text": "cn 顶级域名服务器" },
+    { "id": "edu", "selector": "#edu-label", "text": "edu.cn 权威服务器" },
+    { "id": "note", "selector": "#note", "text": "布局与路径联动示例 · 查询动画为示意" }
+  ],
+  "layout": {
+    "version": 1, "root": "#scene", "width": 1100, "height": 650,
+    "nodes": [
+      { "id": "client", "selector": "#client", "label": "用户主机", "x": 65, "y": 278, "width": 180, "height": 130 },
+      { "id": "local", "selector": "#local", "label": "本地域名服务器", "x": 350, "y": 278, "width": 190, "height": 130 },
+      { "id": "root", "selector": "#root", "label": "根域名服务器", "x": 790, "y": 125, "width": 220, "height": 120 },
+      { "id": "cn", "selector": "#cn", "label": "cn 顶级域名服务器", "x": 790, "y": 285, "width": 220, "height": 120 },
+      { "id": "edu", "selector": "#edu", "label": "edu.cn 权威服务器", "x": 790, "y": 445, "width": 220, "height": 120 }
+    ],
+    "connections": [
+      { "id": "client-local", "selector": "#client-local", "from": "client", "to": "local", "fromAnchor": "right", "toAnchor": "left" },
+      { "id": "local-root", "selector": "#local-root", "from": "local", "to": "root", "fromAnchor": "right", "toAnchor": "left" },
+      { "id": "local-cn", "selector": "#local-cn", "from": "local", "to": "cn", "fromAnchor": "right", "toAnchor": "left" },
+      { "id": "local-edu", "selector": "#local-edu", "from": "local", "to": "edu", "fromAnchor": "right", "toAnchor": "left" }
+    ]
+  }
+}

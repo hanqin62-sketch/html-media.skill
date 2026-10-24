@@ -8,6 +8,7 @@ const { spawnSync } = require('node:child_process');
 const { readManifest, inspectFrame, inspectionSummary } = require('./inspect.cjs');
 const { readConfig, applyConfig, sameFile } = require('./config.cjs');
 const { prepareFonts, loadFonts, fontInspector } = require('./fonts.cjs');
+const { installLayout } = require('./layout.cjs');
 
 function argumentsFor(argv) {
   const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help', 'strict-checks', 'check-fonts', 'strict-fonts']);
@@ -81,8 +82,9 @@ async function main() {
   if (!['.png', '.jpg', '.jpeg', '.mp4'].includes(ext)) throw new Error('Output extension must be .png, .jpg, .jpeg, or .mp4.');
   const video = ext === '.mp4';
   if (args.transparent && ext !== '.png') throw new Error('--transparent is supported only for PNG.');
-  const width = numberOption(args, 'width', 1280, 1, true);
-  const height = numberOption(args, 'height', 720, 1, true);
+  const width = numberOption(args, 'width', config?.layout?.width ?? 1280, 1, true);
+  const height = numberOption(args, 'height', config?.layout?.height ?? 720, 1, true);
+  if (config?.layout && (width !== config.layout.width || height !== config.layout.height)) throw new Error('Layout canvas dimensions must match width/height; use --scale for larger output.');
   const scale = numberOption(args, 'scale', 1, 0.1);
   const time = numberOption(args, 'time', 0, 0);
   const fps = numberOption(args, 'fps', 30, 0.01);
@@ -129,6 +131,7 @@ async function main() {
     });
     if (preparedFonts.length) await loadFonts(page, preparedFonts);
     if (config) await page.evaluate(applyConfig, { text: config.text, styles: config.styles, images: config.images, fonts: config.fonts });
+    if (config?.layout) await page.evaluate(installLayout, config.layout);
     if (video && !await page.evaluate(() => typeof window.renderAt === 'function')) {
       throw new Error('Video HTML must define deterministic window.renderAt(seconds).');
     }
@@ -183,7 +186,7 @@ async function main() {
       source: input, output, cssSize: { width, height }, pixelSize: pixels, scale,
       ...(video ? { frames: count, fps, duration: count / fps, requestedDuration: duration, audio: false } : { time }),
       ...layout,
-      ...(config ? { configuration: { source: config.source, textLayers: config.text.length, styleVariables: Object.keys(config.styles), imageBindings: config.images.length } } : {}),
+      ...(config ? { configuration: { source: config.source, textLayers: config.text.length, styleVariables: Object.keys(config.styles), imageBindings: config.images.length, ...(config.layout ? { layout: config.layout } : {}) } } : {}),
       ...(inspection ? { inspection: inspection.report() } : {}),
       ...(fontCheck ? { fontInspection: fontCheck.report() } : {}),
       warnings: ['DOM text and overflow checks do not replace visual inspection of glyphs, clipping, or compositing.', ...(video ? ['Silent MP4; audio is not captured from HTML.'] : [])]

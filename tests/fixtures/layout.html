@@ -1,0 +1,5 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0}#scene{background:white}#a{background:red}#b{background:blue}#title{position:absolute;left:5px;top:5px;font:12px Arial;color:black}line{stroke:black;stroke-width:2}#signal{position:absolute;left:0;top:0;background:lime;width:6px;height:6px}
+</style></head><body><main id="scene"><span id="title">LAYOUT</span><svg><line id="wire"/></svg><div id="a"><span>A</span></div><div id="b"><span>B</span></div><div id="signal"></div></main><script>
+window.renderAt=t=>{if(window.htmlMediaLayout){const p=window.htmlMediaLayout.pointOnConnection('wire',t/2);document.getElementById('signal').style.transform=`translate(${p.x-3}px,${p.y-3}px)`;}};
+</script></body></html>
