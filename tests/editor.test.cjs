@@ -87,7 +87,11 @@ test('saved layout exports matching PNG and H.264 video through the existing ren
     assert.deepEqual(pixel(100, 90), [255, 0, 0, 255]); assert.deepEqual(pixel(40, 90), [255, 255, 255, 255]);
     await page.locator('#overlay').evaluate(el => el.style.visibility = 'hidden');
     const preview = PNG.sync.read(await frame.locator('#scene').screenshot());
-    assert.deepEqual(preview.data, png.data, 'Editor preview and exported still must use the same pixels.');
+    const differences = [];
+    for (let i = 0; i < png.data.length; i += 4) {
+      if (!preview.data.subarray(i, i + 4).equals(png.data.subarray(i, i + 4))) differences.push({ x: i / 4 % png.width, y: Math.floor(i / 4 / png.width), preview: [...preview.data.subarray(i, i + 4)], exported: [...png.data.subarray(i, i + 4)] });
+    }
+    assert.equal(differences.length, 0, `Preview/export mismatch (${preview.width}x${preview.height} vs ${png.width}x${png.height}), ${differences.length} pixels. First differences: ${JSON.stringify(differences.slice(0, 8))}`);
     await page.locator('#overlay').evaluate(el => el.style.visibility = '');
     const result = await post(page, '/export', { layout: await state(page), format: 'mp4' });
     assert.equal(result.body.status, 'passed', result.body.log);
