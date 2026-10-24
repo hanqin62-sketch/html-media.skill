@@ -265,6 +265,13 @@ test('declared expected fonts detect system fallback and invalid font bindings f
   assert.throws(() => readConfig(configuration('font-invalid.json', { text: [{ id: 'title', selector: '#title', text: 'A', fontId: 'unknown' }] })), /Unknown fontId/);
 });
 
+test('font inspection preserves genuine missing-resource failures', () => {
+  const file = manifest('font-missing-resource.json', [{ id: 'body', selector: 'body', text: '' }]);
+  const result = render('font-missing-resource.png', ['--manifest', file, '--check-fonts'], 'missing', false);
+  assert(!fs.existsSync(result.file));
+  assert.match(result.result.stderr, /Resource failed|decode/);
+});
+
 test('video font inspection catches a family change in a later exported frame', () => {
   const template = path.join(output, 'font-timeline.html');
   fs.writeFileSync(template, '<!doctype html><meta charset="utf-8"><style>body{margin:0}#title{position:absolute;top:16px;left:16px;font-size:20px}</style><div id="title"></div><script>window.renderAt=t=>{if(t>=0.25)document.querySelector("#title").style.fontFamily="serif"}</script>');

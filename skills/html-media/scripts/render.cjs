@@ -113,6 +113,9 @@ async function main() {
     if (!args['allow-network']) {
       await context.route(/^https?:\/\//, route => route.abort('blockedbyclient'));
     }
+    // Enable CSS while the page is still blank. Enabling after file navigation can
+    // make Chromium's inspector refetch the document and report an origin failure.
+    if (checkFonts) fontCheck = await fontInspector(context, page, manifest.layers, preparedFonts);
     await page.goto(pathToFileURL(input).href, { waitUntil: 'load', timeout: 30000 });
     await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; caret-color: transparent !important; }' });
     await page.evaluate(async () => {
@@ -126,7 +129,6 @@ async function main() {
     });
     if (preparedFonts.length) await loadFonts(page, preparedFonts);
     if (config) await page.evaluate(applyConfig, { text: config.text, styles: config.styles, images: config.images, fonts: config.fonts });
-    if (checkFonts) fontCheck = await fontInspector(context, page, manifest.layers, preparedFonts);
     if (video && !await page.evaluate(() => typeof window.renderAt === 'function')) {
       throw new Error('Video HTML must define deterministic window.renderAt(seconds).');
     }
