@@ -1,6 +1,6 @@
 {
   "name": "html-media-skill",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "Render local HTML into images and deterministic videos",
   "license": "MIT",

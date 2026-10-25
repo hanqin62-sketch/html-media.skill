@@ -1,5 +1,12 @@
 # Changelog / 更新记录
 
+## 0.6.1 — 2026-10-25
+
+- Clarify layout-review triggers for requested reviews, existing project agreements and replacement compositions when required references are unavailable. 明确主动审布局、项目已有约定、必要参考缺失后重新构图的触发条件。
+- Distinguish candidate preparation, layout acceptance and explicit waivers; reasonable defaults, narration edits and internal checks do not bypass required acceptance. 区分草案准备、布局确认与明确免确认，避免默认值、改台词和内部检查替代确认。
+- Add bilingual preview/editor fallback guidance and focused manual behavioral cases; preserve direct production and accepted-layout workflows. 补充双语预览、编辑器不可用时的处理及行为复测案例，保留直接制作与已确认布局的流程。
+- Instruction/documentation patch only; no renderer or editor enforcement change. 本版仅修订指令与文档，未增加渲染器或编辑器强制确认机制。
+
 ## 0.6.0 — 2026-10-25
 
 - Explicit scene timelines with local animation time, shared canvas dimensions and complete-video export. 显式多场景时间线、场景内时间、统一画布与完整视频导出。

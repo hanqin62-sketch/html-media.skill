@@ -1,6 +1,6 @@
 # HTML Media
 
-**v0.6.0:** Multi-scene layout editing, complete-layout/step views, play/pause and full-video scrubbing. Run `npm run demo:story`, then open the printed local URL; read the [scene and playback guide](skills/html-media/references/timeline.md). Single-page projects remain compatible and gain playback controls.
+**v0.6.1:** Clarifies when a replacement layout needs user acceptance before full video rendering, without adding repeated confirmation to ordinary tasks. See the [layout-review workflow](skills/html-media/references/editor.md). Multi-scene editing and playback remain available via `npm run demo:story` and the [scene guide](skills/html-media/references/timeline.md).
 
 
 

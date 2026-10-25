@@ -1,6 +1,6 @@
 # HTML Media
 
-**v0.6.0：**新增多场景布局编辑、完整布局/步骤视图，以及播放、暂停和整段进度拖动。运行 `npm run demo:story`，打开终端打印的本地地址；阅读[场景与播放指南](skills/html-media/references/timeline.zh-CN.md)。原有单页面项目保持兼容，也可使用播放控件。
+**v0.6.1：**明确重建布局时何时需要先展示并获得用户确认，同时避免普通任务反复确认。详见[布局确认流程](skills/html-media/references/editor.zh-CN.md)。多场景编辑和播放继续通过 `npm run demo:story` 及[场景指南](skills/html-media/references/timeline.zh-CN.md)使用。
 
 
 

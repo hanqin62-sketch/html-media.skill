@@ -4,6 +4,8 @@
 
 HTML defines visuals, PNG frames provide deterministic sampling, and FFmpeg encodes the result. The helper exports silent H.264 MP4. Audio mixing and transparent video are separate workflows.
 
+Before full video rendering, apply the [layout-review decision](../SKILL.md). When it requires review, follow the [preview and acceptance workflow](editor.md): show the candidate composition and wait for acceptance or an explicit waiver. Permission to recreate a missing reference or shorten narration does not accept a replacement layout. Use stills or editor playback to prepare the review; do not render the complete video as a way to obtain layout acceptance. Already accepted layouts and ordinary direct-production requests do not need another confirmation.
+
 ## Timeline contract
 
 Define `window.renderAt(seconds)`, optionally async. Calling it twice at the same time must produce the same state; calls may arrive out of order:

@@ -31,6 +31,10 @@ For visual changes, include before/after screenshots or representative video fra
 
 涉及画面时附上修改前后截图或视频代表帧。基础检查后按实际改动补充验证，不要添加只复述实现细节的测试。
 
+For layout-review instruction changes, use the [manual behavioral cases](docs/WORKFLOW_CHECKS.md). These require observing agent actions; document validation and rendering tests alone do not prove that the agent waits for acceptance.
+
+布局确认指令改动参照[人工行为复测案例](docs/WORKFLOW_CHECKS.md)，观察代理实际操作；文档校验和渲染测试通过，不代表代理一定会等待确认。
+
 ## Keep the skill maintainable / 保持技能可维护
 
 - Keep `skills/html-media/SKILL.md` concise; put conditional detail in linked references. 核心指令保持简洁，条件性细节放进参考文档。

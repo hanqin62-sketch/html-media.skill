@@ -2,7 +2,17 @@
 
 [中文](editor.zh-CN.md)
 
-Let the user arrange declared elements before exporting a still or video. A persistent topology with messages travelling along its lines is one scene; do not split it into pages for each animation step. Both single-page and multi-scene projects support playback controls. For scene lists, complete-layout/step views and local animation time, read [timeline.md](timeline.md).
+Use this workflow when the user wants to arrange elements or the [skill's layout-review rule](../SKILL.md) applies. A persistent topology with messages travelling along its lines is one scene; do not split it into pages for each animation step. Both single-page and multi-scene projects support playback controls. For scene lists, complete-layout/step views and local animation time, read [timeline.md](timeline.md).
+
+## Present and accept a layout
+
+When review is required, prepare and show an actual layout preview with the major elements, labels, connections and color relationships. Present completed arrangements rather than an arbitrary last frame; for multiple scenes show each scene, with step views when replacement content overlaps. Use `renderLayout` or suitable static layout states so animation entrances do not hide reviewable content.
+
+For editable node compositions such as topologies, declare `layout` (or `timeline`) and provide the running editor URL and brief instructions. Users may drag elements or describe changes; they need not operate the editor themselves. If the editor cannot run or be reached, explain that limitation and show static previews for text-directed changes, retaining the required acceptance before full video rendering.
+
+Identify the shown revision as a draft and ask whether to use it or adjust it. Wait for acceptance of that revision, such as “use this layout, export”, or an explicit waiver of review. Opening a URL, saving a config, silence, progress narration and internal validation do not establish acceptance. If the human user chooses MP4 and clicks export, that action can authorize export of that revision; the agent must not click it on the user's behalf to manufacture acceptance. The current tools do not enforce this conversational requirement.
+
+After acceptance, continue without repeated confirmation unless the agent materially changes the composition. Preserve the accepted arrangement through technical adjustments and minor corrections. Execute specific user-directed changes under their stated authorization; seek another review only for remaining assistant-chosen material changes. While waiting, preparation, static layout renders and editor playback can continue; defer complete-video rendering and encoding until acceptance or waiver.
 
 ## Run and edit
 
