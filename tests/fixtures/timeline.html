@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0}main{background:white}#second{background:#ddeeff}.node{background:red}.blue{background:blue}.inner{width:100%;height:100%;font:12px Arial}line{stroke:black;stroke-width:2}.signal{position:absolute;width:6px;height:6px;background:lime;left:0;top:0}
+</style></head><body>
+<main id="scene"><svg><line id="wire"/></svg><div class="node" id="a"><span class="inner" id="a-text">A</span></div><div class="node blue" id="b"><span class="inner" id="b-text">B</span></div><div class="signal" id="signal"></div></main>
+<main id="second"><svg><line id="wire-second"/></svg><div class="node" id="c"><span class="inner" id="c-text">C</span></div><div class="node blue" id="d"><span class="inner" id="d-text">D</span></div><div class="signal" id="signal-second"></div></main>
+<script>
+window.renderLayout=({sceneId})=>{const root=document.getElementById(sceneId==='one'?'scene':'second');for(const e of root.querySelectorAll('.inner')) e.style.opacity=1;root.querySelector('.signal').style.visibility='hidden';};
+window.renderAt=(t,{sceneId})=>{window.renderLayout({sceneId});const root=document.getElementById(sceneId==='one'?'scene':'second');root.querySelector('.blue .inner').style.opacity=t<0.5?0:1;const p=window.htmlMediaLayout.pointOnConnection('wire',t);const signal=root.querySelector('.signal');signal.style.visibility='visible';signal.style.transform=`translate(${p.x-3}px,${p.y-3}px)`;};
+</script></body></html>

@@ -82,4 +82,4 @@ HTML 会执行 JavaScript，只运行经过检查或可信的源码。HTTP(S) �
 
 ## 导出前调整布局
 
-运行 `npm run demo:editor` 打开 DNS 示例，或使用 `node skills/html-media/scripts/editor.cjs --config design.json --out-dir outputs/new-edit-session`，打开打印的本地地址。支持拖动、组合、撤销、保存和导出。配置需要声明可编辑节点与连线，详见[布局编辑指南](../skills/html-media/references/editor.zh-CN.md)。本版在指定静帧时间编辑单页面，尚无播放或时间轴控件。
+运行 `npm run demo:editor` 打开单页面 DNS 示例，或 `npm run demo:story` 体验双场景与步骤视图。自己的项目使用 `node skills/html-media/scripts/editor.cjs --config design.json --out-dir outputs/new-edit-session`，打开打印的本地地址。详见[布局编辑指南](../skills/html-media/references/editor.zh-CN.md)和[场景/播放指南](../skills/html-media/references/timeline.zh-CN.md)。布局模式用于调整，播放模式用于检查动画；图片导出选定时间的真实画面，视频导出完整时间线。

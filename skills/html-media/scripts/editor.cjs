@@ -8,13 +8,17 @@ const { spawn } = require('node:child_process');
 const { readConfig, applyConfig } = require('./config.cjs');
 const { editedLayout, installLayout } = require('./layout.cjs');
 const { prepareFonts } = require('./fonts.cjs');
+const { editedTimeline, timelineDuration, installTimeline } = require('./timeline.cjs');
 const uiRoot = path.join(__dirname, '..', 'assets', 'editor');
 const json = value => JSON.stringify(value).replace(/</g, '\\u003c');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.gif': 'image/gif', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf', '.mp4': 'video/mp4' };
 
 async function startEditor(options) {
   const config = readConfig(options.config);
-  if (!config.layout) throw new Error('Editor requires a config with a declared layout. See references/editor.md.');
+  if (!config.layout && !config.timeline) throw new Error('Editor requires a config with a declared layout or timeline. See references/editor.md.');
+  const duration = config.timeline ? timelineDuration(config.timeline) : options.duration ?? 4;
+  if (config.timeline && options.duration !== undefined && Math.abs(options.duration - duration) > 1e-8) throw new Error('Editor duration must match the complete timeline.');
+  if (config.timeline && options.time !== undefined && options.time >= duration) throw new Error('Initial time must be before timeline end.');
   const original = JSON.parse(fs.readFileSync(config.source, 'utf8').replace(/^\uFEFF/, ''));
   const templateRoot = fs.realpathSync(path.dirname(config.template));
   const preparedFonts = prepareFonts(config);
@@ -34,26 +38,26 @@ async function startEditor(options) {
     if (!type) return send(res, 404, { error: 'Unsupported asset type.' });
     send(res, 200, type === 'application/json' ? JSON.parse(fs.readFileSync(file, 'utf8')) : fs.readFileSync(file), type);
   };
-  const save = layout => {
-    const next = editedLayout(config.layout, layout), data = JSON.parse(JSON.stringify(original));
+  const save = request => {
+    const next = config.timeline ? editedTimeline(config.timeline, request.timeline) : editedLayout(config.layout, request.layout), data = JSON.parse(JSON.stringify(original));
     const relative = file => path.relative(outDir, file).split(path.sep).join('/');
     data.template = relative(config.template);
     (data.assets || []).forEach((asset, i) => { asset.src = relative(config.images[i].sourcePath); });
     (data.fonts || []).forEach((font, i) => { font.src = relative(config.fonts[i].sourcePath); });
-    data.layout = next;
+    if (config.timeline) data.timeline = next; else data.layout = next;
     const name = `layout-${String(++revision).padStart(4, '0')}.json`, file = path.join(outDir, name);
     fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', { flag: 'wx' });
     outputFiles.set(name, file);
     return { name, file, url: `/outputs/${name}` };
   };
-  const render = (file, output, format) => new Promise((resolve, reject) => {
+  const render = (file, output, format, time) => new Promise((resolve, reject) => {
     const args = [path.join(__dirname, 'render.cjs'), '--config', file, '--out', output];
     if (config.manifest) args.push('--strict-checks');
     if (config.fonts.length || config.text.some(layer => layer.expectedFonts)) args.push('--strict-fonts');
     if (options.browser) args.push('--browser', options.browser);
     if (options.ffmpeg) args.push('--ffmpeg', options.ffmpeg);
-    if (format === 'mp4') args.push('--duration', String(options.duration ?? 4), '--fps', String(options.fps ?? 24));
-    else args.push('--time', String(options.time ?? 0));
+    if (format === 'mp4') args.push('--duration', String(duration), '--fps', String(options.fps ?? 24));
+    else args.push('--time', String(time));
     child = spawn(process.execPath, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let log = '', timedOut = false;
     const append = chunk => { log = (log + chunk).slice(-16000); };
@@ -71,10 +75,31 @@ window.addEventListener('load', async () => {
     const definitions=${json(preparedFonts.map(({ family, weight, style, bytes }) => ({ family, weight, style, bytes })))};
     for (const def of definitions) { const face=new FontFace(def.family, Uint8Array.from(atob(def.bytes), c=>c.charCodeAt(0)), {weight:def.weight||'normal',style:def.style||'normal'}); await face.load(); document.fonts.add(face); }
     (${applyConfig.toString()})(${json({ text: config.text, styles: config.styles, images: config.images.map((image, i) => ({ ...image, url: `/bound-image/${i}` })), fonts: config.fonts })});
-    (${installLayout.toString()})(${json(config.layout)});
+    for (const layout of ${json(config.timeline ? config.timeline.scenes.map(scene => scene.layout) : [config.layout])}) (${installLayout.toString()})(layout);
+    ${config.timeline ? `(${installTimeline.toString()})(${json(config.timeline)});` : ''}
     const style=document.createElement('style'); style.textContent='*,*::before,*::after { transition:none!important; caret-color:transparent!important; }'; document.head.append(style);
-    window.editorDraw=async layout=>{ window.htmlMediaLayout.apply(layout); if(typeof window.renderAt==='function') await window.renderAt(${Number(options.time ?? 0)}); for(const animation of document.getAnimations()){animation.pause();animation.currentTime=${Number(options.time ?? 0) * 1000};} await document.fonts.ready; await Promise.all(Array.from(document.images, image=>image.decode())); if(issues.length) throw Error(issues.join('\\n')); };
-    await window.editorDraw(${json(config.layout)});
+    window.editorDraw=async (value,view={})=>{
+      let timer;
+      const work=async()=>{
+      const time=view.time ?? ${Number(options.time ?? 0)};
+      if(window.htmlMediaTimeline){
+        window.htmlMediaTimeline.apply(value);
+        if(view.mode==='preview') await window.htmlMediaTimeline.draw(time);
+        else await window.htmlMediaTimeline.drawLayout(view.sceneId || value.scenes[0].id,view.stepId || null);
+      } else {
+        window.htmlMediaLayout.apply(value);
+        if(view.mode!=='preview' && typeof window.renderLayout==='function') await window.renderLayout({sceneId:null,stepId:null,localTime:time});
+        else if(typeof window.renderAt==='function') await window.renderAt(time);
+      }
+      for(const animation of document.getAnimations()){animation.pause();animation.currentTime=(window.htmlMediaTimeline?.state().localTime ?? time)*1000;}
+      await document.fonts.ready; await Promise.all(Array.from(document.images, image=>image.decode()));
+      await new Promise(resolve=>requestAnimationFrame(resolve));
+      if(issues.length) throw Error(issues.join('\\n'));
+      };
+      try { await Promise.race([work(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Preview frame timed out')),30000);})]); }
+      finally { clearTimeout(timer); }
+    };
+    await window.editorDraw(${json(config.timeline || config.layout)});
     parent.postMessage({type:'html-media-ready'}, location.origin);
   } catch(error) { parent.postMessage({type:'html-media-error',message:error.message}, location.origin); }
 });`;
@@ -85,7 +110,7 @@ window.addEventListener('load', async () => {
       if (req.method === 'GET') {
         if (route === '/') return serveFile(res, path.join(uiRoot, 'index.html'));
         if (route === '/editor.js' || route === '/editor.css') return serveFile(res, path.join(uiRoot, route.slice(1)));
-        if (route === '/session.js') return send(res, 200, `window.EDITOR_SESSION=${json({ token, layout: config.layout, scene: `/template/${encodeURIComponent(path.basename(config.template))}`, duration: options.duration ?? 4, fps: options.fps ?? 24, time: options.time ?? 0 })};`, 'text/javascript');
+        if (route === '/session.js') return send(res, 200, `window.EDITOR_SESSION=${json({ token, layout: config.layout, timeline: config.timeline, scene: `/template/${encodeURIComponent(path.basename(config.template))}`, duration, fps: options.fps ?? 24, time: options.time ?? 0 })};`, 'text/javascript');
         if (route === '/scene-init.js') return send(res, 200, sceneInit, 'text/javascript');
         if (/^\/bound-image\/\d+$/.test(route)) {
           const image = config.images[Number(route.split('/').pop())];
@@ -112,17 +137,19 @@ window.addEventListener('load', async () => {
       if (req.headers.origin !== origin || req.headers['x-editor-token'] !== token || req.headers['content-type'] !== 'application/json') return send(res, 403, { error: 'Editor session required.' });
       if (busy) return send(res, 409, { error: 'An export is already running.' });
       const chunks = []; let size = 0;
-      for await (const chunk of req) { size += chunk.length; if (size > 256000) return send(res, 413, { error: 'Request too large.' }); chunks.push(chunk); }
+      for await (const chunk of req) { size += chunk.length; if (size > 8000000) return send(res, 413, { error: 'Request too large.' }); chunks.push(chunk); }
       const request = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       if (route === '/export' && !['png', 'jpg', 'mp4'].includes(request.format)) return send(res, 400, { error: 'Choose PNG, JPG or MP4.' });
+      const time = request.time ?? options.time ?? 0;
+      if (!Number.isFinite(time) || time < 0 || config.timeline && time >= duration) return send(res, 400, { error: 'Export time must be within the timeline.' });
       // Acquire after reading the body too: two requests can arrive together.
       if (busy) return send(res, 409, { error: 'An export is already running.' });
-      const saved = save(request.layout);
+      const saved = save(request);
       if (route === '/save') return send(res, 200, { saved });
       busy = true;
       try {
         const name = saved.name.replace(/\.json$/, `.${request.format}`), output = path.join(outDir, name);
-        const result = await render(saved.file, output, request.format);
+        const result = await render(saved.file, output, request.format, time);
         const media = fs.existsSync(output) ? `/outputs/${name}` : null;
         const report = fs.existsSync(`${output}.json`) ? `/outputs/${name}.json` : null;
         if (media) outputFiles.set(name, output);

@@ -97,6 +97,8 @@ function installLayout(initial) {
     for (const node of current.nodes) matches(nodes.get(node.id), node.x, node.y, node.width, node.height);
   };
   window.htmlMediaLayout = { apply, pointOnConnection, get: () => JSON.parse(JSON.stringify(current)) };
+  window.htmlMediaLayouts ??= new Map();
+  window.htmlMediaLayouts.set(initial.root, window.htmlMediaLayout);
   apply(initial);
 }
 

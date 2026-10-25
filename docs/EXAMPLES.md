@@ -4,6 +4,12 @@
 
 ## Interactive layout / 交互布局
 
+`npm run demo:story` adds a two-scene example with complete-layout/step views and playback controls. [Configuration](../skills/html-media/assets/examples/story.json) · [Template](../skills/html-media/assets/templates/story.html) · [Guide](../skills/html-media/references/timeline.md). The same shared timeline drives full-video export.
+
+运行 `npm run demo:story` 可体验双场景、完整布局/步骤视图与播放控制，导出时保留整段时间线。场景缩略项是节点结构概览，不是成品截图。
+
+![Scenes and playback / 场景与播放](media/story-editor.png)
+
 Run `npm run demo:editor`, then open the printed loopback URL. The original MIT-licensed [DNS template](../skills/html-media/assets/templates/network.html) and [layout config](../skills/html-media/assets/examples/network.json) demonstrate grouped icon/label movement, linked lines and deterministic message motion. Save a new config revision or export directly. This is an illustrative animation, not a complete DNS protocol simulation. See the [editor guide](../skills/html-media/references/editor.md) / [中文指南](../skills/html-media/references/editor.zh-CN.md).
 
 运行命令后打开终端中的本地地址，拖动主机，连线及消息路径随之更新。可以组合、撤销、保存新配置并导出。示例为原创 MIT 许可作品，仅用于展示布局联动，不是完整的 DNS 协议模拟。

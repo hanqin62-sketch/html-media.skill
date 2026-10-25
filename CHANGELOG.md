@@ -1,5 +1,13 @@
 # Changelog / 更新记录
 
+## 0.6.0 — 2026-10-25
+
+- Explicit scene timelines with local animation time, shared canvas dimensions and complete-video export. 显式多场景时间线、场景内时间、统一画布与完整视频导出。
+- Per-scene edits/undo, schematic scene previews, complete-layout hooks and declared step visibility. 各场景独立布局与撤销、布局概览、完整布局接口和声明式步骤显隐。
+- Play/pause/restart and frame-based scrubbing for timeline and legacy single-page projects. 多场景与原有单页面均支持播放、暂停、回到开头和按帧拖动进度。
+- Scene-scoped text inspection, deterministic seek tests and encoded scene-boundary verification. 场景文字检查窗口、确定性回拖测试与编码视频边界验证。
+- Bilingual guides and an original two-scene demo. 双语指南和原创双场景示例。关键帧、场景重排与转场编辑仍待后续实现。
+
 ## 0.5.0 — 2026-10-24
 
 - Single-scene local layout editor with dragging, multi-selection, grouping, center guides, coordinate fields, undo/redo and reset. 新增单页面本地布局编辑器，支持拖动、多选、组合、中心参考线、坐标微调、撤销重做与恢复初稿。

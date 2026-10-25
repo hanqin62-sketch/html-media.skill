@@ -1,0 +1,30 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>多场景 · 查询与响应</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:"Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:#24463b}main{background:#f4f8ef}#result{background:#eef4f7}.heading{position:absolute;left:42px;top:32px}.eyebrow{font-size:12px;letter-spacing:3px;color:#7c9483}h1{font-size:30px;margin:12px 0}.sub{font-size:14px;color:#72877b}.card{border-radius:18px;background:#fffef8;border:1px solid #cadac8;display:grid;place-items:center;text-align:center;box-shadow:0 6px 0 #36583608}.inner{width:100%}.icon{font-size:36px;margin-bottom:12px}.label{font-size:19px;font-weight:600}.description{font-size:13px;color:#718779;margin-top:8px}line{stroke:#9ab49e;stroke-width:3}.packet{position:absolute;left:0;top:0;width:24px;height:18px;background:#efca73;border:1px solid #a28547;border-radius:3px;z-index:4}.footer{position:absolute;left:42px;bottom:28px;font-size:12px;color:#7f9283}#cache .inner{background:transparent}#result .card{border-color:#c6d8e0}
+</style></head><body>
+<main id="query"><div class="heading"><div class="eyebrow">01 / REQUEST</div><h1 id="query-title">从问题出发</h1><div class="sub">同一张拓扑图中的消息移动，不拆成新的场景。</div></div><svg><line id="request-link"/><line id="resolve-link"/></svg>
+<div class="card" id="q-client"><div class="inner"><div class="icon">▣</div><div class="label" id="q-client-label">用户主机</div><div class="description">发起域名查询</div></div></div>
+<div class="card" id="q-local"><div class="inner"><div class="icon">▤</div><div class="label" id="q-local-label">本地服务器</div><div class="description">检查并转发请求</div></div></div>
+<div class="card" id="q-remote"><div class="inner"><div class="icon">▥</div><div class="label" id="q-remote-label">权威服务器</div><div class="description">返回查询结果</div></div></div>
+<div class="packet" id="q-packet"></div><div class="footer">布局与动画示意，不是完整 DNS 协议模拟</div></main>
+<main id="result"><div class="heading"><div class="eyebrow">02 / RESPONSE</div><h1 id="result-title">把答案带回来</h1><div class="sub">布局模式可逐步查看；播放模式按真实时间显示。</div></div>
+<div class="card" id="answer"><div class="inner"><div class="icon">✓</div><div class="label" id="answer-label">收到查询结果</div><div class="description">把对应地址交给用户主机</div></div></div>
+<div class="card" id="cache"><div class="inner"><div class="icon">↻</div><div class="label" id="cache-label">保留缓存</div><div class="description">在有效期内复用已有答案</div></div></div><div class="footer">切换左侧场景，分别调整位置；导出时保留全部场景。</div></main>
+<script>
+const inner = id => document.querySelector(`#${id} .inner`);
+function resetScene(id) {
+  const nodes=id==='query'?['q-client','q-local','q-remote']:['answer','cache'];
+  for(const node of nodes){inner(node).style.opacity='1';inner(node).style.transform='translateY(0px)';}
+  document.getElementById('q-packet').style.visibility='hidden';
+}
+window.renderLayout=({sceneId})=>resetScene(sceneId);
+window.renderAt=(seconds,{sceneId})=>{
+  resetScene(sceneId);
+  if(sceneId==='query'){
+    const progress=Math.max(0,Math.min(1,(seconds-0.5)/0.6));inner('q-remote').style.opacity=progress;inner('q-remote').style.transform=`translateY(${(1-progress)*18}px)`;
+    const point=window.htmlMediaLayout.pointOnConnection(seconds<2?'request-link':'resolve-link',(seconds%2)/2);
+    const packet=document.getElementById('q-packet');packet.style.visibility='visible';packet.style.transform=`translate(${point.x-12}px,${point.y-9}px)`;
+  }else{
+    const progress=Math.max(0,Math.min(1,(seconds-1)/0.6));inner('cache').style.opacity=progress;inner('cache').style.transform=`translateY(${(1-progress)*20}px)`;
+  }
+};
+</script></body></html>

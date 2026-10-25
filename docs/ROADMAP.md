@@ -14,7 +14,8 @@ This is a direction for collaboration, not a delivery schedule. Unchecked items 
 
 - [x] Batch rendering with HTML previews and per-job status reports. 批量渲染、HTML 预览与逐项状态报告。
 - [x] Single-scene layout editor: dragging, grouping, undo, linked lines/motion, saved configs and exports. 单页面布局编辑：拖动、分组、撤销、连线/路径联动、保存配置与导出。
-- [ ] Multi-scene editing, complete-layout/step views and playback controls. 多场景编辑、完整布局/步骤视图和播放控件。
+- [x] Multi-scene editing, complete-layout/step views and playback controls. 多场景编辑、完整布局/步骤视图和播放控件。
+- [ ] Keyframe/path timing edits, scene reordering and authored transitions. 关键帧/路径时序编辑、场景重排与转场编排。
 
 ## Next: trustworthy inspection / 下一步：可靠验收
 

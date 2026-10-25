@@ -4,6 +4,7 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { validateManifest } = require('./inspect.cjs');
 const { validateLayout } = require('./layout.cjs');
+const { validateTimeline } = require('./timeline.cjs');
 
 function object(value, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object.`);
@@ -21,18 +22,33 @@ function readConfig(file) {
   const source = path.resolve(file);
   const data = JSON.parse(fs.readFileSync(source, 'utf8').replace(/^\uFEFF/, ''));
   object(data, 'Config');
-  keys(data, ['version', 'template', 'text', 'styles', 'assets', 'fonts', 'layout'], 'Config');
+  keys(data, ['version', 'template', 'text', 'styles', 'assets', 'fonts', 'layout', 'timeline'], 'Config');
   if (data.version !== 1) throw new Error('Config requires version: 1.');
+  if (data.layout !== undefined && data.timeline !== undefined) throw new Error('Use layout or timeline, not both.');
+  const timeline = data.timeline === undefined ? null : validateTimeline(data.timeline);
   const base = path.dirname(source);
   const template = localFile(data.template, base, 'template');
   const text = data.text === undefined ? [] : data.text;
   if (!Array.isArray(text)) throw new Error('Config text must be an array.');
   for (const layer of text) {
     object(layer, 'Text layer');
-    keys(layer, ['id', 'selector', 'text', 'visibleFrom', 'visibleUntil', 'fontId', 'expectedFonts'], 'Text layer');
+    keys(layer, ['id', 'selector', 'text', 'visibleFrom', 'visibleUntil', 'fontId', 'expectedFonts', 'sceneId'], 'Text layer');
+    if (timeline ? !timeline.scenes.some(scene => scene.id === layer.sceneId) : layer.sceneId !== undefined) throw new Error('Timeline text requires a valid sceneId; sceneId is only supported with timeline.');
     if (layer.expectedFonts !== undefined && (!Array.isArray(layer.expectedFonts) || !layer.expectedFonts.length || layer.expectedFonts.some(x => typeof x !== 'string' || !x.trim()))) throw new Error('expectedFonts must be a nonempty array of actual font family names.');
   }
-  const manifest = text.length ? validateManifest({ version: 1, layers: text }) : null;
+  if (text.length) validateManifest({ version: 1, layers: text });
+  const layers = timeline ? text.map(layer => {
+    let start = 0;
+    for (const scene of timeline.scenes) {
+      if (scene.id === layer.sceneId) {
+        const from = layer.visibleFrom ?? 0, until = layer.visibleUntil ?? scene.duration;
+        if (from >= scene.duration || until > scene.duration) throw new Error('Text visibility must be inside its scene duration.');
+        return { ...layer, visibleFrom: Math.round((start + from) * 1e9) / 1e9, visibleUntil: Math.round((start + until) * 1e9) / 1e9 };
+      }
+      start = Math.round((start + scene.duration) * 1e9) / 1e9;
+    }
+  }) : text;
+  const manifest = text.length ? validateManifest({ version: 1, layers }) : null;
   const styles = data.styles === undefined ? {} : data.styles;
   object(styles, 'styles');
   for (const [key, value] of Object.entries(styles)) {
@@ -59,7 +75,7 @@ function readConfig(file) {
   });
   for (const layer of text) if (layer.fontId !== undefined && !ids.has(layer.fontId)) throw new Error(`Unknown fontId for ${layer.id}.`);
   const layout = data.layout === undefined ? null : validateLayout(data.layout);
-  return { source, template, text, styles, images, fonts, manifest, layout };
+  return { source, template, text, styles, images, fonts, manifest, layout, timeline };
 }
 
 // Runs after template readiness and before renderAt / asset decoding.

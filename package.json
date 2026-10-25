@@ -1,6 +1,6 @@
 {
   "name": "html-media-workspace",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Develop and validate the HTML Media agent skill",
   "license": "MIT",
@@ -17,7 +17,8 @@
     "demo:checked": "node scripts/examples.cjs",
     "demo:config": "node scripts/config-examples.cjs",
     "demo:batch": "node scripts/batch-example.cjs",
-    "demo:editor": "node scripts/editor-example.cjs"
+    "demo:editor": "node scripts/editor-example.cjs",
+    "demo:story": "node scripts/editor-example.cjs --story"
   },
   "devDependencies": {
     "fontkit": "2.0.4",

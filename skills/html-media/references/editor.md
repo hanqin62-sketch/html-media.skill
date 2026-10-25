@@ -1,8 +1,8 @@
-# Single-scene layout editor
+# Layout editor
 
 [中文](editor.zh-CN.md)
 
-Let the user arrange declared elements before exporting a still or video. A persistent topology with messages travelling along its lines is one scene; do not split it into pages for each animation step. This version edits one HTML scene and has no playback or timeline controls.
+Let the user arrange declared elements before exporting a still or video. A persistent topology with messages travelling along its lines is one scene; do not split it into pages for each animation step. Both single-page and multi-scene projects support playback controls. For scene lists, complete-layout/step views and local animation time, read [timeline.md](timeline.md).
 
 ## Run and edit
 
@@ -14,7 +14,7 @@ Open the printed loopback URL. Keep the server running; Ctrl+C stops it. The out
 
 Drag nodes, Shift-click for multiple selection, group/ungroup, or enter coordinates in the sidebar. Coordinates refer to the first selected node and move the entire selection. Arrow keys move by 1px; Shift-arrow moves by 10px. Dragging snaps to canvas center guides; Alt disables snapping. Nodes stay inside the canvas. Undo/redo retain up to 100 operations; reset is undoable. History is not persisted between sessions.
 
-Save creates a new `layout-0001.json` revision without changing the source config. Export also saves a snapshot, then invokes the existing renderer and links the media/report. PNG, JPEG and silent MP4 are supported. `--time` selects the still/editing time (default 0); `--duration` and `--fps` set video length/rate (defaults 4 and 24). Use `--browser` or `--ffmpeg` for explicit executable paths.
+Save creates a new `layout-0001.json` revision without changing the source config. Export also saves a snapshot, then invokes the existing renderer and links the media/report. PNG/JPEG use the selected playback time; MP4 uses the entire video duration. For legacy layouts, `--time` selects the initial/reference time (default 0), and `--duration`/`--fps` set video length/rate (defaults 4 and 24). Timeline projects supply their own duration and complete-layout reference times. Use `--browser` or `--ffmpeg` for explicit executable paths.
 
 Saved configs work with `render.cjs --config`, batch jobs, or a later editor session. Template/image/font paths are rebased relative to each saved config. **The output folder is not a standalone asset bundle**: keep the original project and relative locations when moving or sharing it.
 
@@ -57,10 +57,10 @@ window.renderAt = seconds => {
 };
 ```
 
-The result uses canvas coordinates; progress is clamped to 0–1. Subtract half the moving icon size to center it. `get()` returns a copy of the current layout. Do not overwrite node wrapper geometry/transforms in `renderAt`. Choose a `--time` where editable elements are fully visible. Arbitrary animations are not automatically stripped; existing MP4s cannot be decomposed into editable nodes.
+The result uses canvas coordinates; progress is clamped to 0–1. Subtract half the moving icon size to center it. `get()` returns a copy of the current layout. Do not overwrite node wrapper geometry/transforms in `renderAt`. Legacy layouts without a `renderLayout` hook use their reference `--time` in layout mode; choose a time where elements are visible. A layout hook can explicitly present completed states. Arbitrary animations are not automatically stripped; existing MP4s cannot be decomposed into editable nodes.
 
 ## Inspection and boundaries
 
-Preview shows one selected time, sharing layout data and `renderAt` with export. Matching browsers/fonts improve consistency; pixel identity across environments is not promised. Exports enable strict copy/layout checks when text is declared and retain existing configured font checks. `needs-review` retains media with findings; `error` means export failed. Review final media, especially intermediate motion, occlusion and typography.
+Playback shares layout data and `renderAt` with export. Layout/step views are editing aids, not a promise that every element is visible at every video time. Matching browsers/fonts improve consistency; pixel identity across environments is not promised. Exports enable strict copy/layout checks when text is declared and retain existing configured font checks. `needs-review` retains media with findings; `error` means export failed. Review final media, especially intermediate motion, occlusion and typography.
 
-The server binds only to 127.0.0.1, validates Host and requires same-origin/token-authenticated writes. Only run inspected, trusted HTML: the scene executes scripts on the editor's origin. **This is not an untrusted HTML sandbox.** Preview permits relative assets inside the template directory and explicitly bound images/fonts; remote assets are blocked. Keep unrelated sensitive files outside the template directory. Bound image formats include PNG/JPEG/SVG/WebP/GIF; other supported relative types are listed in the server's MIME map. Templates need an explicit head element. Put relative resources within the template directory, or bind external images through config. Multi-scene editing, timelines, keyframes, resizing, curved paths and automatic visual repair are future work.
+The server binds only to 127.0.0.1, validates Host and requires same-origin/token-authenticated writes. Only run inspected, trusted HTML: the scene executes scripts on the editor's origin. **This is not an untrusted HTML sandbox.** Preview permits relative assets inside the template directory and explicitly bound images/fonts; remote assets are blocked. Keep unrelated sensitive files outside the template directory. Bound image formats include PNG/JPEG/SVG/WebP/GIF; other supported relative types are listed in the server's MIME map. Templates need an explicit head element. Put relative resources within the template directory, or bind external images through config. Keyframe editing, resizing, curved paths, scene reordering and automatic visual repair remain future work.

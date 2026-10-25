@@ -1,6 +1,6 @@
 # HTML Media
 
-**v0.5.0:** A single-scene layout editor with dragging, grouping, undo, linked connections/motion, saved revisions and image/video export. Run `npm run demo:editor` and open the printed local URL; read the [editor guide](skills/html-media/references/editor.md). Font checks, batch rendering and reports from v0.4.0 remain available.
+**v0.6.0:** Multi-scene layout editing, complete-layout/step views, play/pause and full-video scrubbing. Run `npm run demo:story`, then open the printed local URL; read the [scene and playback guide](skills/html-media/references/timeline.md). Single-page projects remain compatible and gain playback controls.
 
 
 

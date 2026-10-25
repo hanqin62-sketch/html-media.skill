@@ -82,4 +82,4 @@ Use `--check-fonts` for actual font usage and `--strict-fonts` to enforce findin
 
 ## Arrange a scene before export
 
-Run `npm run demo:editor` for the DNS example, or `node skills/html-media/scripts/editor.cjs --config design.json --out-dir outputs/new-edit-session`. Open the printed URL to drag, group, undo, save and export. Configs require declared layout nodes and connections; see the [layout editor guide](../skills/html-media/references/editor.md). This version edits one scene at a selected still time; it has no playback/timeline controls.
+Run `npm run demo:editor` for the single-page DNS example, or `npm run demo:story` for two scenes with step views. For your project, use `node skills/html-media/scripts/editor.cjs --config design.json --out-dir outputs/new-edit-session`. Open the printed URL to arrange elements, save and export. See the [layout editor guide](../skills/html-media/references/editor.md) and [scene/playback guide](../skills/html-media/references/timeline.md). Layout and playback modes are separate; stills export the selected real frame, videos export the entire timeline.

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "template": "../templates/story.html",
+  "text": [
+    { "id": "query-title", "selector": "#query-title", "sceneId": "query", "text": "从问题出发" },
+    { "id": "q-client", "selector": "#q-client-label", "sceneId": "query", "text": "用户主机" },
+    { "id": "q-local", "selector": "#q-local-label", "sceneId": "query", "text": "本地服务器" },
+    { "id": "q-remote", "selector": "#q-remote-label", "sceneId": "query", "text": "权威服务器", "visibleFrom": 1.1 },
+    { "id": "result-title", "selector": "#result-title", "sceneId": "result", "text": "把答案带回来" },
+    { "id": "answer", "selector": "#answer-label", "sceneId": "result", "text": "收到查询结果" },
+    { "id": "cache", "selector": "#cache-label", "sceneId": "result", "text": "保留缓存", "visibleFrom": 1.6 }
+  ],
+  "timeline": {
+    "version": 1,
+    "scenes": [
+      {
+        "id": "query", "label": "发起查询", "duration": 4, "editTime": 2,
+        "layout": {
+          "version": 1, "root": "#query", "width": 1000, "height": 560,
+          "nodes": [
+            { "id": "client", "selector": "#q-client", "label": "用户主机", "x": 60, "y": 240, "width": 200, "height": 150 },
+            { "id": "local", "selector": "#q-local", "label": "本地服务器", "x": 400, "y": 240, "width": 200, "height": 150 },
+            { "id": "remote", "selector": "#q-remote", "label": "权威服务器", "x": 740, "y": 240, "width": 200, "height": 150 }
+          ],
+          "connections": [
+            { "id": "request-link", "selector": "#request-link", "from": "client", "to": "local", "fromAnchor": "right", "toAnchor": "left" },
+            { "id": "resolve-link", "selector": "#resolve-link", "from": "local", "to": "remote", "fromAnchor": "right", "toAnchor": "left" }
+          ]
+        }
+      },
+      {
+        "id": "result", "label": "返回与缓存", "duration": 4, "editTime": 2,
+        "steps": [
+          { "id": "received", "label": "步骤 1 · 收到结果", "time": 0.5, "nodes": ["answer"] },
+          { "id": "cached", "label": "步骤 2 · 更新缓存", "time": 2, "nodes": ["answer", "cache"] }
+        ],
+        "layout": {
+          "version": 1, "root": "#result", "width": 1000, "height": 560,
+          "nodes": [
+            { "id": "answer", "selector": "#answer", "label": "查询结果", "x": 140, "y": 220, "width": 280, "height": 190 },
+            { "id": "cache", "selector": "#cache", "label": "缓存", "x": 580, "y": 220, "width": 280, "height": 190 }
+          ],
+          "connections": []
+        }
+      }
+    ]
+  }
+}

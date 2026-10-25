@@ -10,6 +10,7 @@ const { chromium } = require('playwright');
 const { startEditor } = require('../skills/html-media/scripts/editor.cjs');
 const { validateLayout, editedLayout, installLayout } = require('../skills/html-media/scripts/layout.cjs');
 const { readConfig } = require('../skills/html-media/scripts/config.cjs');
+const { validateTimeline, editedTimeline, timelineDuration } = require('../skills/html-media/scripts/timeline.cjs');
 const root = path.resolve(__dirname, '..');
 fs.mkdirSync(path.join(root, '.test-output'), { recursive: true });
 const output = fs.mkdtempSync(path.join(root, '.test-output', 'editor-'));
@@ -140,6 +141,92 @@ test('layout template contract and canvas size mismatches fail with actionable e
   });
   const renderer = path.join(root, 'skills/html-media/scripts/render.cjs');
   await assert.rejects(promisify(execFile)(process.execPath, [renderer, '--config', configFile, '--out', path.join(output, 'bad.png'), '--width', '640'], { windowsHide: true }), /canvas dimensions/);
+});
+
+const secondLayout = { ...clone(base), root: '#second', nodes: [{ ...base.nodes[0], id: 'c', selector: '#c' }, { ...base.nodes[1], id: 'd', selector: '#d' }], connections: [{ id: 'wire', selector: '#wire-second', from: 'c', to: 'd' }] };
+const timeline = { version: 1, scenes: [
+  { id: 'one', label: 'First', duration: 1, editTime: 0.75, layout: clone(base) },
+  { id: 'two', label: 'Second', duration: 1, editTime: 0.75, layout: secondLayout, steps: [{ id: 'first', label: 'Only C', time: 0.25, nodes: ['c'] }, { id: 'both', label: 'C and D', time: 0.75, nodes: ['c', 'd'] }] }
+] };
+const timelineFile = path.join(output, 'timeline.json');
+fs.writeFileSync(timelineFile, JSON.stringify({ version: 1, template: path.join(__dirname, 'fixtures', 'timeline.html'), text: ['a', 'b', 'c', 'd'].map(id => ({ id, selector: `#${id}-text`, text: id.toUpperCase(), sceneId: id < 'c' ? 'one' : 'two', ...(['b', 'd'].includes(id) ? { visibleFrom: 0.5 } : {}) })), timeline }));
+const timelineOptions = { config: timelineFile, duration: 2, fps: 4, time: 0 };
+async function scrub(page, seconds) { await page.locator('#seek').fill(String(seconds)); await page.waitForFunction(t => document.querySelector('#scene').contentWindow.htmlMediaTimeline?.state()?.globalTime === t, seconds); }
+
+test('timeline validates scene boundaries and converts local inspection windows', () => {
+  assert.equal(timelineDuration({ scenes: [{ duration: 0.1 }, { duration: 0.2 }] }), 0.3);
+  assert.deepEqual(validateTimeline(timeline), timeline);
+  for (const mutate of [t => t.scenes[1].id = 'one', t => t.scenes[1].layout.width = 400, t => t.scenes[1].steps[0].nodes = ['missing'], t => t.scenes[0].editTime = 1, t => t.scenes[1].layout.root = '#scene', t => t.scenes[1].steps[0].time = -1]) { const bad = clone(timeline); mutate(bad); assert.throws(() => validateTimeline(bad)); }
+  const edited = clone(timeline); edited.scenes[1].duration = 2; assert.throws(() => editedTimeline(timeline, edited), /Only scene node/);
+  const config = readConfig(timelineFile); assert.deepEqual(config.manifest.layers.find(layer => layer.id === 'd'), { id: 'd', selector: '#d-text', text: 'D', sceneId: 'two', visibleFrom: 1.5, visibleUntil: 2 });
+});
+
+test('scenes retain separate edits and undo history, step views hide only declared nodes', async () => {
+  await withEditor('multi-edit', async ({ page, frame, editor }) => {
+    await page.locator('[data-layer="a"]').click(); await page.locator('#x').fill('70'); await page.locator('#x').press('Tab');
+    await page.locator('[data-scene="1"]').click();
+    await page.locator('[data-layer="c"]').click(); await page.locator('#x').fill('90'); await page.locator('#x').press('Tab');
+    await page.locator('#step').selectOption('first');
+    await page.waitForFunction(() => document.querySelector('#scene').contentWindow.htmlMediaTimeline.state().stepId === 'first');
+    assert.equal(await frame.locator('#d').evaluate(el => getComputedStyle(el).opacity), '0');
+    assert(await page.locator('[data-node="d"]').isHidden());
+    await page.locator('#step').selectOption(''); await page.locator('#undo').click(); assert.equal((await state(page)).nodes[0].x, 30);
+    await page.locator('[data-scene="0"]').click(); assert.equal((await state(page)).nodes[0].x, 70);
+    await page.locator('#save').click(); await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('布局已保存'));
+    const saved = readConfig(path.join(editor.outDir, 'layout-0001.json')); assert.equal(saved.timeline.scenes[0].layout.nodes[0].x, 70); assert.equal(saved.timeline.scenes[1].layout.nodes[0].x, 30);
+    assert.deepEqual(readConfig(timelineFile).timeline, timeline);
+  }, timelineOptions);
+});
+
+test('scrubbing selects exact scene boundaries, restores deterministic frames and full layout', async () => {
+  await withEditor('scrubbing', async ({ page, frame }) => {
+    await scrub(page, 0.25); assert(await page.locator('#overlay').isHidden()); assert(await page.locator('#x').isDisabled());
+    assert.equal(await frame.locator('#b-text').evaluate(el => getComputedStyle(el).opacity), '0');
+    const before = await frame.locator('#signal').getAttribute('style');
+    await scrub(page, 1); assert.equal(await frame.locator('#second').evaluate(el => getComputedStyle(el).opacity), '1');
+    assert.equal(await page.locator('#scene').evaluate(el => el.contentWindow.htmlMediaTimeline.state().localTime), 0);
+    await scrub(page, 1.75); assert.equal(await frame.locator('#d-text').evaluate(el => getComputedStyle(el).opacity), '1');
+    await scrub(page, 0.25); assert.equal(await frame.locator('#signal').getAttribute('style'), before);
+    await page.locator('#mode').selectOption('layout');
+    await page.waitForFunction(() => document.querySelector('#scene').contentWindow.htmlMediaTimeline.state().mode === 'layout');
+    assert.equal(await frame.locator('#b-text').evaluate(el => getComputedStyle(el).opacity), '1'); assert(await page.locator('#overlay').isVisible());
+  }, timelineOptions);
+});
+
+test('play, pause and restart work for both multi-scene and legacy single-page projects', async () => {
+  for (const [name, overrides] of [['multi-play', timelineOptions], ['single-play', { time: 0, duration: 2, fps: 8 }]]) await withEditor(name, async ({ page }) => {
+    await page.locator('#restart').click(); await page.locator('#play').click();
+    await page.waitForFunction(() => Number(document.getElementById('seek').value) >= 0.25);
+    await page.locator('#play').click();
+    assert.match(await page.locator('#play').textContent(), /播放/);
+    const paused = await page.locator('#seek').inputValue();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await page.locator('#seek').inputValue(), paused);
+    await page.locator('#restart').click(); assert.equal(await page.locator('#seek').inputValue(), '0');
+  }, overrides);
+});
+
+test('timeline export retains all scenes, local inspection and seek-selected stills', async () => {
+  await withEditor('multi-export', async ({ page, editor }) => {
+    await scrub(page, 1.75); await page.locator('#export').click(); await page.waitForFunction(() => document.getElementById('status').textContent.startsWith('导出完成'), null, { timeout: 90000 });
+    const png = PNG.sync.read(fs.readFileSync(path.join(editor.outDir, 'layout-0001.png'))); assert.deepEqual([...png.data.subarray(0, 4)], [221, 238, 255, 255]);
+    const result = await post(page, '/export', { timeline, format: 'mp4', time: 1.75 }); assert.equal(result.body.status, 'passed', result.body.log);
+    const file = path.join(editor.outDir, 'layout-0002.mp4');
+    const { stdout } = await promisify(execFile)('ffprobe', ['-v', 'error', '-show_streams', '-of', 'json', file], { windowsHide: true }); const video = JSON.parse(stdout).streams[0]; assert.equal(Number(video.nb_frames), 8); assert.equal(Number(video.duration), 2);
+    const report = JSON.parse(fs.readFileSync(`${file}.json`)); assert.equal(report.timeline.scenes.length, 2); assert.equal(report.inspection.status, 'passed'); assert.equal(report.inspection.layoutSamples.a, 4); assert.equal(report.inspection.layoutSamples.d, 2);
+    const { stdout: raw } = await promisify(execFile)('ffmpeg', ['-v', 'error', '-ss', '1.25', '-i', file, '-frames:v', '1', '-f', 'rawvideo', '-pix_fmt', 'rgb24', 'pipe:1'], { windowsHide: true, encoding: 'buffer', maxBuffer: 1000000 });
+    assert(Math.abs(raw[0] - 221) <= 4 && Math.abs(raw[1] - 238) <= 4 && Math.abs(raw[2] - 255) <= 4, 'Encoded frame after the cut must show the second scene.');
+    assert.equal((await post(page, '/export', { timeline, format: 'png', time: 2 })).status, 400);
+  }, timelineOptions);
+});
+
+test('fractional timeline duration does not add an extra frame from floating-point multiplication', async () => {
+  const data = JSON.parse(fs.readFileSync(timelineFile, 'utf8')); delete data.text;
+  data.timeline.scenes[0].duration = 0.03; data.timeline.scenes[0].editTime = 0;
+  data.timeline.scenes[1].duration = 0.04; data.timeline.scenes[1].editTime = 0; data.timeline.scenes[1].steps = [];
+  const file = path.join(output, 'fractional.json'), video = path.join(output, 'fractional.mp4'); fs.writeFileSync(file, JSON.stringify(data));
+  await promisify(execFile)(process.execPath, [path.join(root, 'skills/html-media/scripts/render.cjs'), '--config', file, '--out', video, '--fps', '100', ...(options.browser ? ['--browser', options.browser] : [])], { windowsHide: true, timeout: 90000 });
+  const report = JSON.parse(fs.readFileSync(`${video}.json`)); assert.equal(report.frames, 7); assert.equal(report.requestedDuration, 0.07);
 });
 
 after(() => console.log(`Editor test artifacts: ${output}`));

@@ -9,6 +9,7 @@ const { readManifest, inspectFrame, inspectionSummary } = require('./inspect.cjs
 const { readConfig, applyConfig, sameFile } = require('./config.cjs');
 const { prepareFonts, loadFonts, fontInspector } = require('./fonts.cjs');
 const { installLayout } = require('./layout.cjs');
+const { installTimeline, timelineDuration } = require('./timeline.cjs');
 
 function argumentsFor(argv) {
   const flags = new Set(['transparent', 'overwrite', 'allow-network', 'help', 'strict-checks', 'check-fonts', 'strict-fonts']);
@@ -82,18 +83,21 @@ async function main() {
   if (!['.png', '.jpg', '.jpeg', '.mp4'].includes(ext)) throw new Error('Output extension must be .png, .jpg, .jpeg, or .mp4.');
   const video = ext === '.mp4';
   if (args.transparent && ext !== '.png') throw new Error('--transparent is supported only for PNG.');
-  const width = numberOption(args, 'width', config?.layout?.width ?? 1280, 1, true);
-  const height = numberOption(args, 'height', config?.layout?.height ?? 720, 1, true);
-  if (config?.layout && (width !== config.layout.width || height !== config.layout.height)) throw new Error('Layout canvas dimensions must match width/height; use --scale for larger output.');
+  const canvas = config?.layout || config?.timeline?.scenes[0].layout;
+  const width = numberOption(args, 'width', canvas?.width ?? 1280, 1, true);
+  const height = numberOption(args, 'height', canvas?.height ?? 720, 1, true);
+  if (canvas && (width !== canvas.width || height !== canvas.height)) throw new Error('Layout canvas dimensions must match width/height; use --scale for larger output.');
   const scale = numberOption(args, 'scale', 1, 0.1);
   const time = numberOption(args, 'time', 0, 0);
   const fps = numberOption(args, 'fps', 30, 0.01);
-  const duration = numberOption(args, 'duration', 4, 0.01);
+  const totalDuration = config?.timeline ? timelineDuration(config.timeline) : null;
+  const duration = numberOption(args, 'duration', totalDuration ?? 4, 0.01);
+  if (totalDuration !== null && (video ? Math.abs(duration - totalDuration) > 1e-8 : time >= totalDuration)) throw new Error('Timeline video duration must match the complete timeline; still time must be before its end.');
   const pixels = { width: width * scale, height: height * scale };
   if (!Number.isInteger(pixels.width) || !Number.isInteger(pixels.height)) throw new Error('width * scale and height * scale must be integers.');
   if (video && (pixels.width % 2 || pixels.height % 2)) throw new Error('H.264 export requires even pixel dimensions.');
   if (video && args.time !== undefined) throw new Error('--time is for stills; video starts at time zero.');
-  const count = video ? Math.ceil(duration * fps) : 1;
+  const count = video ? Math.max(1, Math.ceil(Number((duration * fps).toFixed(9)))) : 1;
   const ffmpeg = args.ffmpeg || 'ffmpeg';
   if (video) {
     const probe = spawnSync(ffmpeg, ['-version'], { encoding: 'utf8', windowsHide: true, timeout: 15000 });
@@ -132,6 +136,10 @@ async function main() {
     if (preparedFonts.length) await loadFonts(page, preparedFonts);
     if (config) await page.evaluate(applyConfig, { text: config.text, styles: config.styles, images: config.images, fonts: config.fonts });
     if (config?.layout) await page.evaluate(installLayout, config.layout);
+    if (config?.timeline) {
+      for (const scene of config.timeline.scenes) await page.evaluate(installLayout, scene.layout);
+      await page.evaluate(installTimeline, config.timeline);
+    }
     if (video && !await page.evaluate(() => typeof window.renderAt === 'function')) {
       throw new Error('Video HTML must define deterministic window.renderAt(seconds).');
     }
@@ -142,7 +150,7 @@ async function main() {
           if (typeof window.renderAt === 'function') await window.renderAt(t);
           for (const animation of document.getAnimations()) {
             animation.pause();
-            animation.currentTime = t * 1000;
+            animation.currentTime = (window.htmlMediaTimeline?.state().localTime ?? t) * 1000;
           }
           await document.fonts.ready;
           await Promise.all(Array.from(document.images, image => image.decode()));
@@ -186,6 +194,7 @@ async function main() {
       source: input, output, cssSize: { width, height }, pixelSize: pixels, scale,
       ...(video ? { frames: count, fps, duration: count / fps, requestedDuration: duration, audio: false } : { time }),
       ...layout,
+      ...(config?.timeline ? { timeline: config.timeline } : {}),
       ...(config ? { configuration: { source: config.source, textLayers: config.text.length, styleVariables: Object.keys(config.styles), imageBindings: config.images.length, ...(config.layout ? { layout: config.layout } : {}) } } : {}),
       ...(inspection ? { inspection: inspection.report() } : {}),
       ...(fontCheck ? { fontInspection: fontCheck.report() } : {}),
